@@ -1,0 +1,55 @@
+# Python bytecode files
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+venv/
+env/
+.venv/
+.env/
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Pytest
+.cache/
+
+# Coverage report
+*.cover
+*.coverage
+.coverage.*
+*.hypothesis/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Environment variables
+.env
+
+# Log files
+*.log
+
+# Database files
+*.sqlite3
+*.db
+
+# Test-related files
+*.tox/
+*.nox/
+*.coverage
+nosetests.xml
+coverage.xml
+*.hypothesis/
+
+# pipenv
+Pipfile.lock
+
+# pytest
+*.db
