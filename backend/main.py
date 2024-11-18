@@ -27,7 +27,6 @@ def run_agent_graph(query: str) -> str:
 
   # # Display the result
   # result['messages'][-1].pretty_print()
-
   return result['messages'][-1]
 
 
