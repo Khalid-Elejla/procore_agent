@@ -79,7 +79,7 @@
 #                     user.get("welcome_email_sent_at"),
 #                     user.get("zip"),
 #                     user.get("work_classification_id"),
-#                     json.dumps(user.get("permission_template")),  # JSON field
+#                     json.(user.get("permission_template")),  # JSON field
 #                     json.dumps(user.get("company_permission_template")),  # JSON field
 #                     json.dumps(user.get("vendor")),  # JSON field
 #                     user.get("role"),
