@@ -39,20 +39,16 @@ llm = load_openai_model()
 
 def PlannerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
     query = state["query"]
-    # messages = state["messages"]
-    last_message = state["messages"][-1] if state["messages"] else state["messages"]
+    messages = state["messages"]
 
     sys_msg = get_planner_system_message()
     message = HumanMessage(content=query)
-    # messages.append(message)
-    last_message.append(message)
+    messages.append(message)
 
 
     # plan = llm.invoke([sys_msg] + messages)
-    plan = llm.invoke([sys_msg] + last_message)
-
-    # messages.append(plan)
-    last_message.append(plan)
+    plan = llm.invoke([sys_msg] + messages)
+    messages.append(plan)
 
     try:
         plan_dict = json.loads(plan.content)
@@ -63,7 +59,7 @@ def PlannerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
         return {
             "plan": plan_dict["plan"],
-            "messages": last_message
+            #"messages": messages
             # "messages": messages + [plan],
             # "messages": [plan],
 
@@ -73,7 +69,7 @@ def PlannerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
         logging.error(f"Raw response: {plan.content}")
         return {
             "plan": [{"step": 1, "action": "Error in plan generation. Please refine your query.", "agent": "planner"}],
-            "messages": last_message
+            #"messages": messages
             # "messages": messages + [plan],
             # "messages": [plan],
         }

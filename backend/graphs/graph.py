@@ -173,23 +173,23 @@ import logging
 #   return react_graphs
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 def build_graph():
 
     try:
         llm = load_openai_model()
-        logging.debug("Initializing SQLDatabaseToolkit...")
+        # logging.debug("Initializing SQLDatabaseToolkit...")
         db = SQLDatabase.from_uri("sqlite:///backend\\procore_db.sqlite")
         toolkit = SQLDatabaseToolkit(db=db, llm=llm)
 
-        logging.debug("Fetching tools from toolkit...")
+        # logging.debug("Fetching tools from toolkit...")
         langchain_sql_toolbox = toolkit.get_tools()
-        logging.debug(f"Tools fetched: {langchain_sql_toolbox}")
+        # logging.debug(f"Tools fetched: {langchain_sql_toolbox}")
 
         database_tools = [sync_users_from_procore] + langchain_sql_toolbox
 
-        logging.debug(f"Final database tools: {database_tools}")
+        # logging.debug(f"Final database tools: {database_tools}")
 
         builders = StateGraph(GraphState)
 
@@ -216,8 +216,8 @@ def build_graph():
         builders.add_edge("reviewer", END)
 
         react_graphs = builders.compile()
-        logging.debug("Graph built successfully!")
+        # logging.debug("Graph built successfully!")
         return react_graphs
     except Exception as e:
-        logging.error(f"Error occurred in build_graph: {e}")
+        # logging.error(f"Error occurred in build_graph: {e}")
         raise
