@@ -1,18 +1,17 @@
 langchain
-langchain-community #to use llm models
-langchain-openai #to use open ai chat models
-langchain-langchain-anthropic #to use anthropic chat models
+langchain-community
+langchain-openai
+langchain-langchain-anthropic
 
-openai #to use openai llm
+openai
 dotenv
 pypdf
 langchain-text-splitters
 langchain-chroma
-google-search-results# to use SERPAPI
-numexpr # to use llm-math
-tabulate # used in pandas
-###################################################
+google-search-results
+numexpr
+tabulate
 tavily-python
-python-docx #for reports tool
-reportlab #fpdf #for reports tool
+python-docx
+reportlab
 langfuse
