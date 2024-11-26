@@ -4,7 +4,7 @@ langchain-openai
 langchain-anthropic
 
 openai
-dotenv
+python-dotenv
 pypdf
 langchain-text-splitters
 langchain-chroma
