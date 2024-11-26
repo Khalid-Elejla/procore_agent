@@ -7,50 +7,182 @@ from ..tools.utils_tools import get_search_tool
 from ..tools.procore_toolset.users_tools import create_user, get_users
 from ..tools.database_tools import sync_users_from_procore
 
-from typing import TypedDict, Annotated, List, Tuple
+from typing import TypedDict, Annotated, List, Tuple, Dict, Any
+import json
 
+import logging
 
 # Define search tool
 
 
 # Initialize LLM using function from openai_models.py
 llm = load_openai_model()
-# users_tools=[create_user, get_users]
-# llm_with_tools = llm.bind_tools(tools)
 
-
-# # Define reasoner function to invoke LLM with the current state
 # def ReviewerAgent(state):
-#     query = state["query"]
-#     messages = state["messages"]
-#     last_message = state["messages"]
-#     sys_msg = get_reviewer_system_message()
-#     message = HumanMessage(content=query)
-#     messages.append(message)
-#     result = [llm.invoke([sys_msg] + messages)]
-#     return {"messages": result}
-def ReviewerAgent(state):
+#   query = state["query"]
+#   messages = state["messages"]
+
+#   # Corrected: Get the last message from messages
+#   last_message = messages[-1] if messages else None
+
+#   sys_msg = get_reviewer_system_message()
+#   message = HumanMessage(content=query)
+#   messages.append(message)
+
+#   # Pass only the relevant messages to the LLM
+#   if last_message:
+#       result = llm.invoke([sys_msg, last_message, message])
+#   else:
+#       result = llm.invoke([sys_msg, message])
+
+#   # Ensure result is a list of messages
+#   return {"messages": [result]}
+
+def ReviewerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
+  """
+  Reviewer agent that synthesizes all previous steps and provides a final response.
+  """
   query = state["query"]
   messages = state["messages"]
+  plan = state.get("plan", [])
+  feedback = state.get("feedback", [])
 
-  # Corrected: Get the last message from messages
-  last_message = messages[-1] if messages else None
+  # Create a comprehensive context for the reviewer
+  context = {
+      "original_query": query,
+      "execution_plan": plan,
+      "execution_feedback": feedback,
+      "previous_responses": [msg.content for msg in messages if hasattr(msg, 'content')]
+  }
 
   sys_msg = get_reviewer_system_message()
-  message = HumanMessage(content=query)
-  messages.append(message)
 
-  # Pass only the relevant messages to the LLM
-  if last_message:
-      result = llm.invoke([sys_msg, last_message, message])
-  else:
+  # Create a structured prompt that includes all context
+  review_prompt = f"""
+  Original Query: {context['original_query']}
+
+  Execution Plan:
+  {json.dumps(context['execution_plan'], indent=2)}
+
+  Execution Feedback:
+  {json.dumps(context['execution_feedback'], indent=2)}
+
+  Please provide a comprehensive response that:
+  1. Addresses the original query
+  2. Incorporates the execution results
+  3. Handles any errors or empty results appropriately
+  4. Provides any relevant recommendations or insights
+  """
+
+  message = HumanMessage(content=review_prompt)
+
+  try:
       result = llm.invoke([sys_msg, message])
 
-  # Ensure result is a list of messages
-  return {"messages": [result]}
+      # Parse the JSON response
+      content_dict = json.loads(result.content)
 
-# SQLAgent_tool = SQLAgent.as_tool(
-#   arg_types={"query task": str},  # Change to accept a natural language query
-#   name="SQL Agent",
-#   description="This agent specializes in converting natural language queries into SQL statements. It is connected to the Procore users database and can efficiently retrieve the required data based on user input. Simply provide a natural language question, and the agent will craft the corresponding SQL query to fetch the relevant data table."
-# )
+      # Extract only the final_output from the review
+      final_output = content_dict["review"]["final_output"]
+
+      return {
+          "messages": [HumanMessage(content=final_output)],
+          "final_response": {
+              "success": True,
+              "response": final_output,
+              "context": context,
+              "metadata": {
+                  "has_sql_results": any(f.get("status") == "success" for f in feedback),
+                  "has_errors": any(f.get("status") == "error" for f in feedback),
+                  "steps_completed": len(feedback)
+              }
+          }
+      }
+  except Exception as e:
+      error_response = {
+          "messages": [HumanMessage(content=f"Error in review process: {str(e)}")],
+          "final_response": {
+              "success": False,
+              "error": str(e),
+              "context": context,
+              "metadata": {
+                  "has_sql_results": False,
+                  "has_errors": True,
+                  "steps_completed": len(feedback)
+              }
+          }
+      }
+      return error_response
+# def ReviewerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
+#   """
+#   Reviewer agent that synthesizes all previous steps and provides a final response.
+#   """
+#   query = state["query"]
+#   messages = state["messages"]
+#   plan = state.get("plan", [])
+#   feedback = state.get("feedback", [])
+
+#   # Create a comprehensive context for the reviewer
+#   context = {
+#       "original_query": query,
+#       "execution_plan": plan,
+#       "execution_feedback": feedback,
+#       "previous_responses": [msg.content for msg in messages if hasattr(msg, 'content')]
+#   }
+
+#   sys_msg = get_reviewer_system_message()
+
+#   # Create a structured prompt that includes all context
+#   review_prompt = f"""
+#   Original Query: {context['original_query']}
+
+#   Execution Plan:
+#   {json.dumps(context['execution_plan'], indent=2)}
+
+#   Execution Feedback:
+#   {json.dumps(context['execution_feedback'], indent=2)}
+
+#   Please provide a comprehensive response that:
+#   1. Addresses the original query
+#   2. Incorporates the execution results
+#   3. Handles any errors or empty results appropriately
+#   4. Provides any relevant recommendations or insights
+#   5. any data can represented as a table represent it as table
+#   """
+
+#   message = HumanMessage(content=review_prompt)
+
+#   try:
+#       result = llm.invoke([sys_msg, message])
+
+#       #content_dict = json.loads(result.content)
+      
+
+#       return {
+#           "messages": [result],
+#           "final_response": {
+#               "success": True,
+#               "response": result.content,
+#               "context": context,
+#               "metadata": {
+#                   "has_sql_results": any(f.get("status") == "success" for f in feedback),
+#                   "has_errors": any(f.get("status") == "error" for f in feedback),
+#                   "steps_completed": len(feedback)
+#               }
+#           }
+#       }
+#   except Exception as e:
+#       error_response = {
+#           "messages": [HumanMessage(content=f"Error in review process: {str(e)}")],
+#           "final_response": {
+#               "success": False,
+#               "error": str(e),
+#               "context": context,
+#               "metadata": {
+#                   "has_sql_results": False,
+#                   "has_errors": True,
+#                   "steps_completed": len(feedback)
+#               }
+#           }
+#       }
+#       return error_response
