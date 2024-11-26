@@ -239,7 +239,19 @@ uris = [
       os.getenv("PRODUCTION_REDIRECT_URI")
   ]
 
-current_url = st.get_option("server.baseUrlPath")
+
+
+
+# Get the current URL using Streamlit's experimental get_query_params
+def get_current_url():
+  try:
+      return st.query_params.get('_stcore_url_', [''])[0]
+  except:
+      return ''
+
+current_url = get_current_url()
+
+#current_url = st.get_option("server.baseUrlPath")
 
 
 if "streamlit.app" in current_url:
