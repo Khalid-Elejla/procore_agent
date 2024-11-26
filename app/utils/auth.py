@@ -228,6 +228,7 @@ import os
 import requests
 import streamlit as st
 from datetime import datetime, timedelta
+import logging
 
 # Procore credentials
 PROCORE_CLIENT_ID = os.getenv("PROCORE_CLIENT_ID")
@@ -240,9 +241,12 @@ uris = [
 
 current_url = st.get_option("server.baseUrlPath")
 
+
 if "streamlit.app" in current_url:
+    logging.error("yes",current_url)
     REDIRECT_URI = uris[1]  # Return production URI
 else:
+    logging.error("no",current_url)
     REDIRECT_URI = uris[0]
 
 # REDIRECT_URI = os.getenv("REDIRECT_URI")
