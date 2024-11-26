@@ -232,7 +232,21 @@ from datetime import datetime, timedelta
 # Procore credentials
 PROCORE_CLIENT_ID = os.getenv("PROCORE_CLIENT_ID")
 PROCORE_CLIENT_SECRET = os.getenv("PROCORE_CLIENT_SECRET")
-REDIRECT_URI = os.getenv("REDIRECT_URI")
+
+uris = [
+      os.getenv("LOCAL_REDIRECT_URI"),
+      os.getenv("PRODUCTION_REDIRECT_URI")
+  ]
+
+current_url = st.get_option("server.baseUrlPath")
+
+if "streamlit.app" in current_url:
+    REDIRECT_URI = uris[1]  # Return production URI
+else:
+    REDIRECT_URI = uris[0]
+
+# REDIRECT_URI = os.getenv("REDIRECT_URI")
+
 AUTHORIZATION_URL = os.getenv("AUTHORIZATION_URL")
 TOKEN_URL = os.getenv("TOKEN_URL")
 
