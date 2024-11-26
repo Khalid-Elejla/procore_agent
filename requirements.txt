@@ -1,7 +1,7 @@
 langchain
 langchain-community
 langchain-openai
-langchain-langchain-anthropic
+langchain-anthropic
 
 openai
 dotenv
