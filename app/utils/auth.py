@@ -318,6 +318,9 @@ def refresh_token():
       return False
 
 def authenticate():
+  
+  # current_url = get_current_url()
+  REDIRECT_URI = os.getenv("PRODUCTION_REDIRECT_URI")
   """Main authentication function"""
   # Check if we have a valid token
   if (
