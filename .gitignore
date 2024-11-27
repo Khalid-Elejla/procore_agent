@@ -36,9 +36,6 @@ dist/
 # Log files
 *.log
 
-# Database files
-*.sqlite3
-*.db
 
 # Test-related files
 *.tox/
@@ -51,5 +48,3 @@ coverage.xml
 # pipenv
 Pipfile.lock
 
-# pytest
-*.db
