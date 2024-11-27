@@ -48,3 +48,5 @@ coverage.xml
 # pipenv
 Pipfile.lock
 
+secrets.txt
+
