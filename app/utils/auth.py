@@ -255,17 +255,17 @@ def get_current_url():
   return current_url
 
 # current_url = get_current_url()
-current_url = os.getenv("PRODUCTION_REDIRECT_URI")
+REDIRECT_URI = os.getenv("PRODUCTION_REDIRECT_URI")
 
 #current_url = st.get_option("server.baseUrlPath")
 
 
-if "streamlit.app" in current_url:
-    logging.error("yes",current_url)
-    REDIRECT_URI = uris[1]  # Return production URI
-else:
-    logging.error("no",current_url)
-    REDIRECT_URI = uris[0]
+# if "streamlit.app" in current_url:
+#     logging.error("yes",current_url)
+#     REDIRECT_URI = uris[1]  # Return production URI
+# else:
+#     logging.error("no",current_url)
+#     REDIRECT_URI = uris[0]
 
 # REDIRECT_URI = os.getenv("REDIRECT_URI")
 
