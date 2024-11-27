@@ -39,7 +39,7 @@ llm = load_openai_model()
 # users_tools=[create_user, get_users]
 
 
-db = SQLDatabase.from_uri("sqlite:///backend\\procore_db.sqlite")
+db = SQLDatabase.from_uri("sqlite:///.\\backend\\procore_db.sqlite")
 toolkit = SQLDatabaseToolkit(db=db, llm=llm)
 
 langchain_sql_toolbox= toolkit.get_tools()
