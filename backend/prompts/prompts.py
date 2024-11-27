@@ -39,6 +39,7 @@ Only these agents can be used in plans:
 **Guidelines:**
 - **Scope**: Decline queries outside Procore or project management.
 - **Loop Handling**: Abort and notify the user if a loop is detected.
+- **last agent in the plan**: always make sure the last agent in the plan is reviewer
 - **Plan Format**: Provide a JSON object:
 {
 "plan": [
