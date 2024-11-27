@@ -321,6 +321,7 @@ def authenticate():
   
   # current_url = get_current_url()
   REDIRECT_URI = os.getenv("PRODUCTION_REDIRECT_URI")
+  logging.error(REDIRECT_URI)
   """Main authentication function"""
   # Check if we have a valid token
   if (
@@ -337,6 +338,8 @@ def authenticate():
 
   # Create the authorization URL
   auth_url = f"{AUTHORIZATION_URL}?client_id={PROCORE_CLIENT_ID}&response_type=code&redirect_uri={REDIRECT_URI}"
+  logging.error(REDIRECT_URI)
+  logging.error(auth_url)
 
   # Check if code is in query params
   query_params = st.query_params
