@@ -322,7 +322,6 @@ def authenticate():
 
   current_url = st.get_option("server.baseUrlPath")
 
-
   if "streamlit.app" in current_url:
       logging.error("yes",current_url)
       REDIRECT_URI = os.getenv("PRODUCTION_REDIRECT_URI")
@@ -332,7 +331,7 @@ def authenticate():
 
   
   # current_url = get_current_url()
-  REDIRECT_URI = os.getenv("LOCAL_REDIRECT_URI")
+  REDIRECT_URI = os.getenv("PRODUCTION_REDIRECT_URI")
 
   """Main authentication function"""
   # Check if we have a valid token
