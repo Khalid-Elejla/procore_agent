@@ -1,6 +1,6 @@
 # states.py
 
-from typing import TypedDict, Annotated, List, Tuple
+from typing import TypedDict, Annotated, List, Tuple, Union
 from langchain_core.messages import AnyMessage
 import operator
 from langgraph.graph import START, StateGraph, END
@@ -11,10 +11,24 @@ class PlanStep(TypedDict):
   action: str
   agent: str
 
+
+class AnswerState(TypedDict):  
+    success: bool  
+    response: str  # or Any depending on your response type  
+    context: dict  # or specific context structure  
+    metadata: dict[str, Union[bool, int, str]]  
+
 class AgentResponse(TypedDict):
   agent: str
   response: str
 
+
+# "feedback": [{  
+#     "agent": "sql_agent",
+#     "command": ""
+#     "response": "Invalid input: Required state parameters missing",  
+#     "status": "error"  
+# }]
 class AgentState(TypedDict):
   command: str
   agent: str
@@ -25,6 +39,7 @@ class GraphState(TypedDict):
   plan: List[PlanStep]
   # current_task: AgentState
   feedback:Annotated[List[AgentResponse], operator.add]
+  answer:AnswerState
   messages: Annotated[List[AnyMessage], operator.add]
   # sql_agent_messages: Annotated[List[AnyMessage], operator.add]
 

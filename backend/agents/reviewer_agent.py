@@ -87,7 +87,7 @@ def ReviewerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
       return {
           "messages": [HumanMessage(content=final_output)],
-          "final_response": {
+          "answer": {
               "success": True,
               "response": final_output,
               "context": context,
@@ -101,7 +101,7 @@ def ReviewerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
   except Exception as e:
       error_response = {
           "messages": [HumanMessage(content=f"Error in review process: {str(e)}")],
-          "final_response": {
+          "answer": {
               "success": False,
               "error": str(e),
               "context": context,
