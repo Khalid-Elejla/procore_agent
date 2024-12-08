@@ -13,8 +13,6 @@ from langchain_community.utilities import SQLDatabase
 from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 
 
-
-
 # # Initialize LLM using function from openai_models.py
 # llm = load_openai_model()
 # # users_tools=[create_user, get_users]
@@ -113,8 +111,8 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
   try:
       # Get response from LLM with tools
-      response = llm_with_tools.invoke([sys_msg] + messages)
-      #response = llm_with_tools.invoke([sys_msg] + [command] + sql_agent_messages)
+      # response = llm_with_tools.invoke([sys_msg] + messages)
+      response = llm_with_tools.invoke([sys_msg] + [command] + sql_agent_messages)
 
 
       # Extract SQL results from the response
@@ -143,8 +141,8 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
                   result_data["data"] = parse_table_from_content(response.content)
 
           return {
-              "messages": [response],
-              # "sql_agent_messages":[response],
+              # "messages": [response],
+              "sql_agent_messages":[response],
               "command": command,
             #   "feedback": [{
             #       "status": "success",
@@ -164,9 +162,9 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
           result_data["success"] = False
           result_data["error"] = f"Error parsing query results: {str(parsing_error)}"
           return {
-              #"sql_agent_messages":[response],
+              "sql_agent_messages":[response],
               "command": command,
-              "messages": [response],
+              # "messages": [response],
               "feedback": [{
                   "agent": "sql_agent",
                   "command":"",
@@ -185,9 +183,9 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
       error_msg = HumanMessage(content=str(e))
       return {
-          # "sql_agent_messages":[error_msg],
+          "sql_agent_messages":[error_msg],
           "command": command,
-          "messages": [error_msg],
+          # "messages": [error_msg],
           "feedback": [{
               "status": "error",
               "step": 2,

@@ -1,7 +1,9 @@
 # main.py
 from ..models.openai_models import load_openai_model  # Import the model loader
 from langgraph.graph import START, StateGraph, END
-from langgraph.prebuilt import tools_condition, ToolNode
+# from langgraph.prebuilt import tools_condition, ToolNode
+from .graph_tools import custom_tools_condition, SQLToolNode, AToolNode
+
 from IPython.display import Image, display
 
 from ..states.state import  route, GraphState, where_to_go
@@ -19,6 +21,7 @@ from ..agents.reviewer_agent import ReviewerAgent
 
 from langchain_community.utilities import SQLDatabase
 from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
+
 
 # import logging
 # logging.basicConfig(level=logging.DEBUG)
@@ -78,15 +81,26 @@ def build_graph():
         builders.add_node("router", RouterAgent)
         builders.add_node("sql_agent", SQLAgent)
         builders.add_node("reviewer", ReviewerAgent)
-        builders.add_node("sql_tools", ToolNode(database_tools))
+        # builders.add_node("sql_tools", ToolNode(database_tools))
+        builders.add_node("sql_tools", SQLToolNode(database_tools))
 
         builders.add_edge(START, "planner")
         builders.add_edge("planner", "router")
 
         builders.add_conditional_edges("router", route)
+
+        # builders.add_conditional_edges(
+        #     "sql_agent",
+        #     tools_condition,
+        #     {
+        #         "tools": "sql_tools",
+        #         "__end__": "router"
+        #     }
+        # )
+
         builders.add_conditional_edges(
             "sql_agent",
-            tools_condition,
+            custom_tools_condition,
             {
                 "tools": "sql_tools",
                 "__end__": "router"
