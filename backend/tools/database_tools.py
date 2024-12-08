@@ -280,6 +280,7 @@ def sync_users_from_procore() -> str:
           conn.commit()
           conn.close()
           return "Users synchronized successfully with the database."
+          # return {"sql_agent_messages":"Users synchronized successfully with the database."}
 
       except Exception as e:
           return f"Error occurred while syncing users: {str(e)}"

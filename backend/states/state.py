@@ -18,29 +18,31 @@ class AnswerState(TypedDict):
     context: dict  # or specific context structure  
     metadata: dict[str, Union[bool, int, str]]  
 
-class AgentResponse(TypedDict):
-  agent: str
-  response: str
+# class AgentResponse(TypedDict):
+#   agent: str
+#   response: str
+
+class AgentResponse(TypedDict):  
+    agent: str
+    action: str
+    response: str  # or Any depending on your response type  
+    success: bool
 
 
-# "feedback": [{  
-#     "agent": "sql_agent",
-#     "command": ""
-#     "response": "Invalid input: Required state parameters missing",  
-#     "status": "error"  
-# }]
-class AgentState(TypedDict):
-  command: str
-  agent: str
-  messages: Annotated[List[AnyMessage], operator.add]
+# class AgentState(TypedDict):
+#   command: str
+#   agent: str
+#   messages: Annotated[List[AnyMessage], operator.add]
 
 class GraphState(TypedDict):
   query: str
   plan: List[PlanStep]
+  command: str
   # current_task: AgentState
   feedback:Annotated[List[AgentResponse], operator.add]
   answer:AnswerState
   messages: Annotated[List[AnyMessage], operator.add]
+  sql_agent_messages: Annotated[list[AnyMessage], operator.add]
   # sql_agent_messages: Annotated[List[AnyMessage], operator.add]
 
 

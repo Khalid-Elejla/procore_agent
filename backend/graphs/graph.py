@@ -20,163 +20,44 @@ from ..agents.reviewer_agent import ReviewerAgent
 from langchain_community.utilities import SQLDatabase
 from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 
-import logging
-
-
-
-
-# def build_graph():
-
-#     # Define search tool
-#     search = get_search_tool()
-
-#     # # Initialize LLM using function from openai_models.py
-#     # llm = load_openai_model()
-#     # users_tools=[create_user, get_users]
-#     projects_tools=[create_project, get_projects, rename_project]
-#     database_tools=[sync_users_from_procore]
-#     tools=database_tools
-
-
-#     # tools = [search] + projects_tools + SQLAgent_tool
-#     # llm_with_tools = llm.bind_tools(tools)
-
-#     # # Define reasoner function to invoke LLM with the current state
-#     # def reasoner(state):
-#     #     query = state["query"]
-#     #     messages = state["messages"]
-#     #     sys_msg = get_system_message()
-#     #     message = HumanMessage(content=query)
-#     #     messages.append(message)
-#     #     result = [llm_with_tools.invoke([sys_msg] + messages)]
-#     #     return {"messages": result}
-
-
-#     # Build the state graph
-#     builders = StateGraph(GraphState)
-#     builders.add_node("planner", PlannerAgent)
-#     builders.add_node("router", RouterAgent)
-#     builders.add_node("sql_agent", SQLAgent)
-#     builders.add_node("reviewer", ReviewerAgent)
-
-#     #builders.add_node("reviewer")
-#     builders.add_node("sql_tools", ToolNode(tools))
-#     builders.add_conditional_edges("sql_agent", tools_condition, 
-#                                          {
-#           "tools": "sql_tools",  # Route to tools when tool calls are present
-#           "__end__": "router"    # Route back to router when no tool calls
-#       })
-#     builders.add_edge("sql_tools", "sql_agent")
-
-    
-#     builders.add_edge(START, "planner")
-#     builders.add_edge("planner", "router")
-#     builders.add_edge("sql_agent", "router")
-#     # builders.add_edge("web_scraper", "router")
-#     builders.add_edge("reviewer", "router")
-
-#     builders.add_conditional_edges("router", route)
-    
-    
-#     builders.add_conditional_edges("reviewer", where_to_go)
-    
-
-#     # builders = StateGraph(GraphState)
-#     # builders.add_node("reasoner", ReasonerAgent)
-#     # builders.add_node("tools", ToolNode(tools))
-#     # #builders.add_node("sql_agent", SQLAgent)
-
-    
-#     # builders.add_edge(START, "reasoner")
-#     # builders.add_conditional_edges("reasoner", tools_condition)
-    
-#     # builders.add_edge("tools", "reasoner")
-    
-
-
-#     # builders.add_edge("sql_agent", "reasoner")
-#     # builders.add_conditional_edges("reasoner", "sql_agent")
-
-#     # Compile and visualize the graph
-#     react_graphs = builders.compile()
-#     # display(Image(react_graphs.get_graph(xray=True).draw_mermaid_png()))
-#     return react_graphs
-
-# # Call the function to build and display the graph
-# build_graph()
-#==========================================================================================
-# def build_graph():
-#   # Tool definitions
-
-
-#   import logging
-
-#   logging.basicConfig(level=logging.DEBUG)  # Set log level to DEBUG to see all logs
-
-#   try:
-#         db = SQLDatabase.from_uri("sqlite:///procore_db.sqlite")
-#         logging.info("Successfully connected to the database.")
-#   except Exception as e:
-#         logging.error("Failed to connect to the database.", exc_info=True)
-
- 
-
-#   toolkit = SQLDatabaseToolkit(db=db)
-
-#   langchain_sql_toolbox= toolkit.get_tools()
-#   database_tools=[sync_users_from_procore] + langchain_sql_toolbox
-  
-
-
-#   projects_tools = [create_project, get_projects, rename_project]
-#   # database_tools = [sync_users_from_procore]
-#   tools = database_tools
-
-#   # Build the state graph
-#   builders = StateGraph(GraphState)
-
-#   # Add nodes
-#   builders.add_node("planner", PlannerAgent)
-#   builders.add_node("router", RouterAgent)
-#   builders.add_node("sql_agent", SQLAgent)
-#   builders.add_node("reviewer", ReviewerAgent)
-
-#   builders.add_node("sql_tools", ToolNode(tools))
-
-#   # Add basic edges
-#   builders.add_edge(START, "planner")
-#   builders.add_edge("planner", "router")
-#   # builders.add_edge("reviewer", "router")
-
-#   # Add conditional edges for SQL agent and tools
-#   builders.add_conditional_edges(
-#       "sql_agent",
-#       tools_condition,
-#       {
-#           "tools": "sql_tools",  # Route to tools when tool calls are present
-#           "__end__": "router"    # Route back to router when no tool calls
-#       }
-#   )
-
-#   # Add edge from tools back to SQL agent
-#   builders.add_edge("sql_tools", "sql_agent")
-
-#   # Add router conditional edges
-#   builders.add_conditional_edges("router", route)
-
-#   # Add reviewer conditional edges
-# #   builders.add_conditional_edges("reviewer", where_to_go)
-#   builders.add_edge("reviewer", END)
-
-#   # Compile the graph
-#   react_graphs = builders.compile()
-#   return react_graphs
-import logging
-
+# import logging
 # logging.basicConfig(level=logging.DEBUG)
 
-def build_graph():
 
+# from pydantic import BaseModel
+# from langchain_core.messages import (AnyMessage,)
+# from typing import (Any,Union, Literal)
+
+# def tools_condition(
+#     state: Union[list[AnyMessage], dict[str, Any], BaseModel],
+# ) -> Literal["tools", "__end__"]:
+#         """Use in the conditional_edge to route to the ToolNode if the last message
+
+#         has tool calls. Otherwise, route to the end.
+
+#         Args:
+#             state (Union[list[AnyMessage], dict[str, Any], BaseModel]): The state to check for
+#                 tool calls. Must have a list of messages (MessageGraph) or have the
+#                 "messages" key (StateGraph).
+
+#         Returns:
+#             The next node to route to.
+#         """
+#         if isinstance(state, list):
+#             ai_message = state[-1]
+#         elif isinstance(state, dict) and (messages := state.get("sql_agent_messages", [])):
+#             ai_message = messages[-1]
+#         elif messages := getattr(state, "sql_agent_messages", []):
+#             ai_message = messages[-1]
+#         else:
+#             raise ValueError(f"No messages found in input state to tool_edge: {state}")
+#         if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:
+#             return "tools"
+#         return "__end__"
+
+
+
+def build_graph():
     try:
         llm = load_openai_model()
         # logging.debug("Initializing SQLDatabaseToolkit...")

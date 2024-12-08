@@ -105,6 +105,8 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
   """
   query = state["query"]
   messages = state["messages"]
+  command=state["command"]
+  sql_agent_messages=state["sql_agent_messages"]
 
   # Create system message
   sys_msg = get_sql_agent_system_message(dialect="SQLite", top_k=5)
@@ -112,6 +114,8 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
   try:
       # Get response from LLM with tools
       response = llm_with_tools.invoke([sys_msg] + messages)
+      #response = llm_with_tools.invoke([sys_msg] + [command] + sql_agent_messages)
+
 
       # Extract SQL results from the response
       result_data = {
@@ -140,6 +144,8 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
           return {
               "messages": [response],
+              # "sql_agent_messages":[response],
+              "command": command,
             #   "feedback": [{
             #       "status": "success",
             #       "step": 2,
@@ -148,7 +154,9 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
             #   }]
               "feedback": [{
                   "agent": "sql_agent",
+                  "command":"",
                   "response": f"{response.content}",
+                  "status": "Success",
               }]
           }
 
@@ -156,16 +164,14 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
           result_data["success"] = False
           result_data["error"] = f"Error parsing query results: {str(parsing_error)}"
           return {
+              #"sql_agent_messages":[response],
+              "command": command,
               "messages": [response],
-            #   "feedback": [{
-            #       "status": "error",
-            #       "step": 2,
-            #       "message": "Error parsing SQL results",
-            #       "result": result_data
-            #   }]
               "feedback": [{
                   "agent": "sql_agent",
+                  "command":"",
                   "response": f"Error parsing SQL results",
+                  "status": "Error",
               }]
           }
 
@@ -179,6 +185,8 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
       error_msg = HumanMessage(content=str(e))
       return {
+          # "sql_agent_messages":[error_msg],
+          "command": command,
           "messages": [error_msg],
           "feedback": [{
               "status": "error",
