@@ -72,7 +72,7 @@ def RouterAgent(state: Dict[str, Any]) -> Dict[str, Any]:
           "command": command,
           "feedback": [{
                   "agent": "router",
-                  "action": "route to the next agent",
+                  "action": "Route the request to the most appropriate agent.",
                   "response": f"routing to {next_agent} to execute: {command}",
                   "status": "Success"
               }]
@@ -87,7 +87,7 @@ def RouterAgent(state: Dict[str, Any]) -> Dict[str, Any]:
           "command": "Please provide a clear plan for the task",
           "feedback":[ {
               "agent": "planner",
-              "action": "route to the next agent",
+              "action": "Route the request to the most appropriate agent.",
               "response": "Please provide a clear plan for the task",
               "status": "Error"
               }]

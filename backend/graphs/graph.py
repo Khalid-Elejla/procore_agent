@@ -2,7 +2,7 @@
 from ..models.openai_models import load_openai_model  # Import the model loader
 from langgraph.graph import START, StateGraph, END
 # from langgraph.prebuilt import tools_condition, ToolNode
-from .graph_tools import custom_tools_condition, SQLToolNode, AToolNode
+from .graph_tools import custom_tools_condition, CustomToolNode
 
 from IPython.display import Image, display
 
@@ -77,14 +77,15 @@ def build_graph():
 
         builders = StateGraph(GraphState)
 
+        builders.add_edge(START, "planner")
+
         builders.add_node("planner", PlannerAgent)
         builders.add_node("router", RouterAgent)
         builders.add_node("sql_agent", SQLAgent)
         builders.add_node("reviewer", ReviewerAgent)
         # builders.add_node("sql_tools", ToolNode(database_tools))
-        builders.add_node("sql_tools", SQLToolNode(database_tools))
+        builders.add_node("sql_tools", CustomToolNode(database_tools, message_key="sql_agent_messages"))
 
-        builders.add_edge(START, "planner")
         builders.add_edge("planner", "router")
 
         builders.add_conditional_edges("router", route)
@@ -100,8 +101,7 @@ def build_graph():
 
         builders.add_conditional_edges(
             "sql_agent",
-            custom_tools_condition,
-            {
+            lambda state: custom_tools_condition(state, message_key="sql_agent_messages"),              {
                 "tools": "sql_tools",
                 "__end__": "router"
             }
