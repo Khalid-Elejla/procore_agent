@@ -13,34 +13,14 @@ from langchain_community.utilities import SQLDatabase
 from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 
 
-# # Initialize LLM using function from openai_models.py
-# llm = load_openai_model()
-# # users_tools=[create_user, get_users]
-# database_tools=[sync_users_from_procore]
-# tools = database_tools
-# llm_with_tools = llm.bind_tools(tools)
-
-
-# # Define reasoner function to invoke LLM with the current state
-# def SQLAgent(state):
-#     query = state["query"]
-#     messages = state["messages"]
-#     last_message = state["messages"]
-#     sys_msg = get_sql_agent_system_message(dialect="SQLite", top_k=5)
-#     message = HumanMessage(content=query)
-#     messages.append(message)
-#     result = [llm_with_tools.invoke([sys_msg] + messages)]
-#     return {"messages": result}
-
 # Initialize LLM using function from openai_models.py
 llm = load_openai_model()
-# users_tools=[create_user, get_users]
 
 
 db = SQLDatabase.from_uri("sqlite:///./backend/procore_db.sqlite")
 toolkit = SQLDatabaseToolkit(db=db, llm=llm)
 
-langchain_sql_toolbox= toolkit.get_tools()
+langchain_sql_toolbox = toolkit.get_tools()
 database_tools=[sync_users_from_procore] + langchain_sql_toolbox
 tools = database_tools
 llm_with_tools = llm.bind_tools(tools)
@@ -106,73 +86,95 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
   command=state["command"]
   sql_agent_messages=state["sql_agent_messages"]
 
+
   # Create system message
-  sys_msg = get_sql_agent_system_message(dialect="SQLite", top_k=5)
+  sys_msg = get_sql_agent_system_message(dialect="SQLite", top_k=5)#, command=command)
+
 
   try:
       # Get response from LLM with tools
       # response = llm_with_tools.invoke([sys_msg] + messages)
-      response = llm_with_tools.invoke([sys_msg] + [command] + sql_agent_messages)
+    #   response = llm_with_tools.invoke([sys_msg] + [command] + sql_agent_messages)
+      response = llm_with_tools.invoke([sys_msg] + sql_agent_messages + [command])
 
 
-      # Extract SQL results from the response
-      result_data = {
-          "success": True,
-          "data": None,
-          "message": "",
-          "error": None
+      return {
+          # "messages": [response],
+          "sql_agent_messages":[response],
+          "command": command,
+      #   "feedback": [{
+      #       "status": "success",
+      #       "step": 2,
+      #       "message": "SQL query execution completed",
+      #       "result": result_data
+      #   }]
+          "feedback": [{
+              "agent": "sql_agent",
+              "command":command,
+              "response": f"{response.content}",
+              "status": "Success",
+          }]
       }
+#==========================================================================================
+    #   # Extract SQL results from the response
+    #   result_data = {
+    #       "success": True,
+    #       "data": None,
+    #       "message": "",
+    #       "error": None
+    #   }
 
-      # Parse the response to extract query results
-      # Assuming the response contains SQL results in a structured format
-      try:
-          # Extract table data from response
-          # This depends on how your llm_with_tools returns data
-          if hasattr(response, 'additional_kwargs') and 'table_data' in response.additional_kwargs:
-              result_data["data"] = response.additional_kwargs['table_data']
-          elif hasattr(response, 'content'):
-              # If no data but query executed successfully
-              if "No records found" in response.content:
-                  result_data["message"] = "Query executed successfully but returned no records"
-                  result_data["data"] = []
-              else:
-                  # Try to parse table data from content
-                  # This would depend on your specific output format
-                  result_data["data"] = parse_table_from_content(response.content)
+    #   # Parse the response to extract query results
+    #   # Assuming the response contains SQL results in a structured format
+    #   try:
+    #       # Extract table data from response
+    #       # This depends on how your llm_with_tools returns data
+    #       if hasattr(response, 'additional_kwargs') and 'table_data' in response.additional_kwargs:
+    #           result_data["data"] = response.additional_kwargs['table_data']
+    #       elif hasattr(response, 'content'):
+    #           # If no data but query executed successfully
+    #           if "No records found" in response.content:
+    #               result_data["message"] = "Query executed successfully but returned no records"
+    #               result_data["data"] = []
+    #           else:
+    #               # Try to parse table data from content
+    #               # This would depend on your specific output format
+    #               result_data["data"] = parse_table_from_content(response.content)
 
-          return {
-              # "messages": [response],
-              "sql_agent_messages":[response],
-              "command": command,
-            #   "feedback": [{
-            #       "status": "success",
-            #       "step": 2,
-            #       "message": "SQL query execution completed",
-            #       "result": result_data
-            #   }]
-              "feedback": [{
-                  "agent": "sql_agent",
-                  "command":"",
-                  "response": f"{response.content}",
-                  "status": "Success",
-              }]
-          }
+    #       return {
+    #           # "messages": [response],
+    #           "sql_agent_messages":[response],
+    #           "command": command,
+    #         #   "feedback": [{
+    #         #       "status": "success",
+    #         #       "step": 2,
+    #         #       "message": "SQL query execution completed",
+    #         #       "result": result_data
+    #         #   }]
+    #           "feedback": [{
+    #               "agent": "sql_agent",
+    #               "command":command,
+    #               "response": f"{response.content}",
+    #               "status": "Success",
+    #           }]
+    #       }
 
-      except Exception as parsing_error:
-          result_data["success"] = False
-          result_data["error"] = f"Error parsing query results: {str(parsing_error)}"
-          return {
-              "sql_agent_messages":[response],
-              "command": command,
-              # "messages": [response],
-              "feedback": [{
-                  "agent": "sql_agent",
-                  "command":"",
-                  "response": f"Error parsing SQL results",
-                  "status": "Error",
-              }]
-          }
+    #   except Exception as parsing_error:
+    #       result_data["success"] = False
+    #       result_data["error"] = f"Error parsing query results: {str(parsing_error)}"
+    #       return {
+    #           "sql_agent_messages":[response],
+    #           "command": command,
+    #           # "messages": [response],
+    #           "feedback": [{
+    #               "agent": "sql_agent",
+    #               "command":command,
+    #               "response": f"Error parsing SQL results",
+    #               "status": "Error",
+    #           }]
+    #       }
 
+#===============================================================
   except Exception as e:
       result_data = {
           "success": False,

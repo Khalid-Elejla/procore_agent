@@ -27,7 +27,9 @@ Only these agents can be used in plans:
 **Guidelines:**
 - **Scope**: Decline queries outside Procore or project management.
 - **Loop Handling**: Abort and notify the user if a loop is detected.
-- **last agent in the plan**: always make sure the last agent in the plan is reviewer
+- **last agent in the plan**: always make sure the last agent in the plan is reviewer.
+- **Task Grouping**: Group all tasks assigned to the same agent into a single action with multiple clear instructions to maintain clarity and consistency. 
+- **Agent Actions**: Ensure that tasks assigned to the agent are clearly defined and include all necessary information. Assume each agent operates independently and is focused solely on its designated task.
 - **Plan Format**: Provide a JSON object:
 {
 "plan": [
@@ -40,8 +42,7 @@ Only these agents can be used in plans:
 {
 "plan": [
   {"step": 1, "action": "Research project management best practices related to the query", "agent": "web_scraper"},
-  {"step": 2, "action": "Review the information for relevance and accuracy", "agent": "reviewer"},
-  {"step": 3, "action": "Present the information to the user clearly", "agent": "reviewer"}
+  {"step": 2, "action": "Review the information for relevance and accuracy then Present the information to the user clearly", "agent": "reviewer"}
 ]
 }
 
@@ -57,6 +58,7 @@ Only these agents can be used in plans:
 - Outline steps to address the user's request.
 - Assign actions to the appropriate agents.
 - Maintain a professional and helpful tone.
+- Ensure that consecutive tasks assigned to the same agent are combined into a single action with multiple clear instructions. 
 
 **Note**: Do not include any commentary outside the JSON plan.
 
@@ -64,8 +66,6 @@ Only these agents can be used in plans:
 """
       )
   )
-
-
 
 
 
@@ -111,50 +111,101 @@ Provide your response in the following JSON format:
     )
 
 
-def get_sql_agent_system_message(dialect: str, top_k: int) -> SystemMessage:
-  return SystemMessage(
-      content=f"""You are an agent designed to interact with a SQL database.
 
-Your task is to:
-1. Understand the user's question
-2. Check the available tables
-3. make your tables is synced with procore and up to date.
-4. Create and execute appropriate SQL queries
-5. Return the results in a clear format
+def get_sql_agent_system_message(dialect: str, top_k: int, command: str = None) -> SystemMessage:  
+    return SystemMessage(  
+        content=f"""
 
-Guidelines:
-- Create syntactically correct {dialect} queries
-- Limit results to {top_k} rows unless specified otherwise
-- Only query relevant columns (avoid SELECT *)
-- Order results to show most relevant data first
+You are an agent designed to interact with a SQL database.  
 
-IMPORTANT:
-- Do not use DML statements (INSERT, UPDATE, DELETE, DROP etc.)
-- Always check table existence before querying
-- Provide clear explanations with your results
+# Your task is to:  
+# 1. Understand the user's question: {command if command else 'as provided in the conversation'} and extract specific requirements (columns, row limits, filters, etc.). 
+# 2. Check the available tables and relevant schema.
+# 3. Create and execute a syntactically correct SQL query.
+# 4. Return the results in a clear format  
 
-Response format:
-1. First, check available tables
-2. Then, examine needed table schemas
-3. Write and execute your query
-4. Present results clearly with explanation
+# Guidelines:  
+# - Create syntactically correct {dialect} queries  
+# - Default to {top_k} rows if no limit is specified.
+# - If specific columns are requested, query only those columns, otherwise select relevant columns or all columns in case columns tables are less than 5 columns 
+# - Handle query errors by rewriting and re-executing.
 
-Example response:
-"Let me check the available tables first...
-[Tool use for checking tables]
+# IMPORTANT:  
+# - Do not use DML statements (INSERT, UPDATE, DELETE, DROP etc.)  
+# - Always check table existence before querying  
+# - Provide clear explanations with your results  
+# - Parse the command carefully for any specific requirements about:  
+#   * Number of records to return  
+#   * Specific columns to include  
+#   * Sorting preferences  
+#   * Any filtering conditions  
 
-Now I'll check the schema of relevant tables...
-[Tool use for checking schema]
+# Response format:  
+# 1. First, check available tables
+# 2. Then, examine needed table schemas  
+# 3. Write and execute your query, considering:  
+#    - User-specified row limits (if any)  
+#    - Requested columns (if specified)  
+#    - Sorting requirements (if mentioned)  
+# 4. Present results clearly with explanation  
 
-I'll execute this query:
-SELECT column1, column2 FROM table WHERE condition LIMIT {top_k}
+""")
 
-Here are the results:
-[Results]
+# def get_sql_agent_system_message(dialect: str, top_k: int, command: str = None) -> SystemMessage:  
+#     return SystemMessage(  
+#         content=f"""You are an agent designed to interact with a SQL database.  
 
-Explanation: [Brief explanation of the results]"
-"""
-  )
+# Your task is to:  
+# 1. Understand the user's question: {command if command else 'as provided in the conversation'} and extract specific requirements (columns, row limits, filters, etc.). 
+# 2. Check the available tables and relevant schema.
+# 3. Create and execute a syntactically correct SQL query.
+# 4. Return the results in a clear format  
+
+# Guidelines:  
+# - Create syntactically correct {dialect} queries  
+# - Default to {top_k} rows if no limit is specified.
+# - If specific columns are requested, query only those columns, otherwise select relevant columns or all columns in case columns tables are less than 5 columns 
+# - Handle query errors by rewriting and re-executing.
+
+# IMPORTANT:  
+# - Do not use DML statements (INSERT, UPDATE, DELETE, DROP etc.)  
+# - Always check table existence before querying  
+# - Provide clear explanations with your results  
+# - Parse the command carefully for any specific requirements about:  
+#   * Number of records to return  
+#   * Specific columns to include  
+#   * Sorting preferences  
+#   * Any filtering conditions  
+
+# Response format:  
+# 1. First, check available tables
+# 2. Then, examine needed table schemas  
+# 3. Write and execute your query, considering:  
+#    - User-specified row limits (if any)  
+#    - Requested columns (if specified)  
+#    - Sorting requirements (if mentioned)  
+# 4. Present results clearly with explanation  
+
+# Example response:  
+
+# "Let me analyze the request: '{command if command else 'user request'}'  
+
+# First, checking available tables...  
+# [Tool use for checking tables]  
+
+# Now I'll check the schema of relevant tables...  
+# [Tool use for checking schema]  
+
+# Based on the requirements, I'll execute this query:
+# [Tool use for creating and executing queries]    
+
+# Here are the results:  
+# [Results]  
+
+# Explanation: [Brief explanation of the results and how they match the requested requirements]"  
+# """  
+#     )  
+
 
 def get_router_system_message(plan: str, feedback: str = "No feedback available yet") -> SystemMessage:
   """

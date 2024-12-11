@@ -16,7 +16,7 @@ import logging
 # search = get_search_tool()
 
 # Initialize LLM using function from openai_models.py
-llm = load_openai_model()
+llm = load_openai_model(model="gpt-4o")
 # users_tools=[create_user, get_users]
 # projects_tools=[create_project, get_projects, rename_project]
 # database_tools=[sync_users_from_procore]
@@ -59,6 +59,12 @@ def PlannerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
         return {
             "plan": plan_dict["plan"],
+            "feedback": [{
+                  "agent": "planner",
+                  "action": "Generate a plan to address the user's request.",
+                  "response": f"The plan was successfully generated.",
+                  "status": "Success"
+              }]
             #"messages": messages
             # "messages": messages + [plan],
             # "messages": [plan],
@@ -69,6 +75,12 @@ def PlannerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
         logging.error(f"Raw response: {plan.content}")
         return {
             "plan": [{"step": 1, "action": "Error in plan generation. Please refine your query.", "agent": "planner"}],
+            "feedback": [{
+                  "agent": "planner",
+                  "action": "Generate a plan to address the user's request.",
+                  "response": f"Error in plan generation. Please refine your query.",
+                  "status": "Error"
+              }]
             #"messages": messages
             # "messages": messages + [plan],
             # "messages": [plan],

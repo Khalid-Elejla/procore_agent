@@ -18,21 +18,11 @@ class AnswerState(TypedDict):
     context: dict  # or specific context structure  
     metadata: dict[str, Union[bool, int, str]]  
 
-# class AgentResponse(TypedDict):
-#   agent: str
-#   response: str
-
 class AgentResponse(TypedDict):  
     agent: str
     action: str
     response: str  # or Any depending on your response type  
     success: bool
-
-
-# class AgentState(TypedDict):
-#   command: str
-#   agent: str
-#   messages: Annotated[List[AnyMessage], operator.add]
 
 class GraphState(TypedDict):
   query: str
@@ -44,7 +34,6 @@ class GraphState(TypedDict):
   messages: Annotated[List[AnyMessage], operator.add]
   sql_agent_messages: Annotated[list[AnyMessage], operator.add]
   # sql_agent_messages: Annotated[List[AnyMessage], operator.add]
-
 
 class AgentGraphState(TypedDict):
     query: str
@@ -62,16 +51,6 @@ class AgentGraphState(TypedDict):
     final_Answer: Annotated[List[AnyMessage], operator.add]
 
 
-
-# def where_to_go(state):
-#     messages = state['messages']
-#     last_message = messages[-1]
-#     if "success" in last_message.content["status"]:
-#         return END
-#     elif "failure" in last_message.content["status"]:
-#         return "router"
-#     else:
-#         return "reviewer error"
 def where_to_go(state):
   messages = state['messages']
   last_message = messages[-1]
@@ -95,37 +74,6 @@ def where_to_go(state):
   except KeyError:
       # Handle missing keys in the JSON
       return "reviewer error"
-# def where_to_go(state):
-#     messages = state['messages']
-#     last_message = messages[-1]
-#     if "function_call" in last_message.additional_kwargs:
-#         return "continue"
-#     else:
-#         return "end"
-
-# def router(state):
-#     # This is the router
-#     messages = state["messages"]
-#     last_message = messages[-1]
-#     if "FINAL ANSWER" in last_message.content:
-#         # Any agent decided the work is done
-#         return END
-#     return "continue"
-
-# def router(state):
-#     # This is the router
-#     messages = state["messages"]
-#     last_message = messages[-1]
-#     if "planner" in last_message.content["next_agent"]:
-#         return "planner"
-#     elif "web_scraper" in last_message.content["next_agent"]:
-#         return "web_scraper"
-#     elif "sql_agent" in last_message.content["next_agent"]:
-#         return "sql_agent"
-#     elif "reviewer" in last_message.content["next_agent"]:
-#         return "reviewer"
-#     else:
-#         return "router_error"
 
 def route(state: dict) -> str:
   """

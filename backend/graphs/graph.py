@@ -65,7 +65,7 @@ def build_graph():
         llm = load_openai_model()
         # logging.debug("Initializing SQLDatabaseToolkit...")
         db = SQLDatabase.from_uri("sqlite:///backend\\procore_db.sqlite")
-        toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+        toolkit = SQLDatabaseToolkit(db=db, llm=load_openai_model(temperature=0))
 
         # logging.debug("Fetching tools from toolkit...")
         langchain_sql_toolbox = toolkit.get_tools()
