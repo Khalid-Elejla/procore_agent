@@ -7,7 +7,7 @@ from langchain_openai import ChatOpenAI
 OPENAI_API_KEY=os.getenv("OPENAI_API_KEY")
 
 # Function to initialize the OpenAI LLM with API key
-def load_openai_model(temperature=0, model="gpt-4o"):
+def load_openai_model(temperature=0, model="gpt-3.5-turbo"):
     if OPENAI_API_KEY:
         return ChatOpenAI(temperature=temperature, model=model)
     else:

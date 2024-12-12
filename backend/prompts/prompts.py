@@ -112,21 +112,66 @@ Provide your response in the following JSON format:
 
 
 
+# def get_sql_agent_system_message(dialect: str, top_k: int, command: str = None) -> SystemMessage:  
+#     return SystemMessage(  
+#         content=f"""
+
+# You are an agent designed to interact with a SQL database.  
+
+# # Your task is to:
+# # 1. Understand the user's question: {command if command else 'as provided in the conversation'} and extract specific requirements (columns, row limits, filters, etc.). 
+# # 2. Check the available tables.
+# # 3. Based on the avail
+# # 3. Create and execute a syntactically correct SQL query.
+# # 4. Return the results in a clear format  
+
+# # Guidelines:  
+# # - Create syntactically correct {dialect} queries  
+# # - Default to {top_k} rows if no limit is specified.
+# # - If specific columns are requested, query only those columns, otherwise select relevant columns or all columns in case columns tables are less than 5 columns 
+# # - Handle query errors by rewriting and re-executing.
+
+# # IMPORTANT:  
+# # - Do not use DML statements (INSERT, UPDATE, DELETE, DROP etc.)  
+# # - Always check table existence before querying  
+# # - Provide clear explanations with your results  
+# # - Parse the command carefully for any specific requirements about:  
+# #   * Number of records to return  
+# #   * Specific columns to include  
+# #   * Sorting preferences  
+# #   * Any filtering conditions  
+
+# # Response format:  
+# # 1. First, check available tables
+# # 2. Then, examine needed table schemas  
+# # 3. Write and execute your query, considering:  
+# #    - User-specified row limits (if any)  
+# #    - Requested columns (if specified)  
+# #    - Sorting requirements (if mentioned)  
+# # 4. Present results clearly with explanation  
+
+# """)
+
+
+
+
 def get_sql_agent_system_message(dialect: str, top_k: int, command: str = None) -> SystemMessage:  
     return SystemMessage(  
         content=f"""
 
 You are an agent designed to interact with a SQL database.  
 
-# Your task is to:  
-# 1. Understand the user's question: {command if command else 'as provided in the conversation'} and extract specific requirements (columns, row limits, filters, etc.). 
-# 2. Check the available tables and relevant schema.
-# 3. Create and execute a syntactically correct SQL query.
-# 4. Return the results in a clear format  
+# Your task is to:
+# 1. Check the available tables.
+# 2. Understand the user's question: {command if command else 'as provided in the conversation'} and detect the relevant tables.
+# 3. get the schemas of the related tables.
+# 4. Based on the user question and the schemas of the related tables specify query inputs
+# 5. Create and execute a syntactically correct SQL query.
+# 5. Return the results in a clear format  
 
 # Guidelines:  
 # - Create syntactically correct {dialect} queries  
-# - Default to {top_k} rows if no limit is specified.
+# - Default to returning {top_k} rows if no limit is specified, unless the user explicitly requests all results.
 # - If specific columns are requested, query only those columns, otherwise select relevant columns or all columns in case columns tables are less than 5 columns 
 # - Handle query errors by rewriting and re-executing.
 
@@ -150,6 +195,7 @@ You are an agent designed to interact with a SQL database.
 # 4. Present results clearly with explanation  
 
 """)
+
 
 # def get_sql_agent_system_message(dialect: str, top_k: int, command: str = None) -> SystemMessage:  
 #     return SystemMessage(  
@@ -259,7 +305,7 @@ You are a reviewer agent. Your primary task is to evaluate, validate, and refine
 
 
 **Response Format:**
-Provide your response in the following JSON format:
+Provide your response in the following JSON format (no markdown, no json tags):
 {
   "review": {
     "status": "success or failure",

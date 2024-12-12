@@ -71,7 +71,8 @@ def build_graph():
         langchain_sql_toolbox = toolkit.get_tools()
         # logging.debug(f"Tools fetched: {langchain_sql_toolbox}")
 
-        database_tools = [sync_users_from_procore] + langchain_sql_toolbox
+        # database_tools = [sync_users_from_procore] + langchain_sql_toolbox
+        database_tools = toolkit.get_tools()
 
         # logging.debug(f"Final database tools: {database_tools}")
 

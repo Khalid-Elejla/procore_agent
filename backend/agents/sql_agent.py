@@ -20,10 +20,12 @@ llm = load_openai_model()
 db = SQLDatabase.from_uri("sqlite:///./backend/procore_db.sqlite")
 toolkit = SQLDatabaseToolkit(db=db, llm=llm)
 
-langchain_sql_toolbox = toolkit.get_tools()
-database_tools=[sync_users_from_procore] + langchain_sql_toolbox
-tools = database_tools
-llm_with_tools = llm.bind_tools(tools)
+# langchain_sql_toolbox = toolkit.get_tools()
+# database_tools=[sync_users_from_procore] + langchain_sql_toolbox
+# tools = database_tools
+# llm_with_tools = llm.bind_tools(tools)
+database_tools = toolkit.get_tools()
+llm_with_tools = llm.bind_tools(database_tools)
 
 
 
@@ -88,7 +90,7 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
 
   # Create system message
-  sys_msg = get_sql_agent_system_message(dialect="SQLite", top_k=5)#, command=command)
+  sys_msg = get_sql_agent_system_message(dialect="SQLite", top_k=20)#, command=command)
 
 
   try:
