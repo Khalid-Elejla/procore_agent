@@ -42,12 +42,26 @@ def RouterAgent(state: Dict[str, Any]) -> Dict[str, Any]:
   if isinstance(state.get("plan"), list):
       plan = json.dumps(state["plan"], indent=2)
   else:
-      plan = state.get("plan")#, "No plan available yet")
+      plan = state.get("plan", "No plan available yet")
 
-  feedback = state.get("feedback")#, "No feedback available yet")
+  feedback = state.get("feedback", "No feedback available yet")
 
   # Get system message with plan and feedback
-  sys_msg = get_router_system_message(plan=plan, feedback=feedback)
+  # sys_msg = get_router_system_message(plan=plan, feedback=feedback)
+
+  sys_msg = get_router_system_message()
+
+  # Create a structured prompt that includes all context
+  router_prompt = f"""
+  Here is the plan provided by the planner:
+  Plan: {plan}
+
+  Here is the feedback provided by the agents:
+  Feedback: {feedback}
+  """
+  message = HumanMessage(content=router_prompt)
+
+#33
 
   # Add user query to messages
 #   message = HumanMessage(content=query)
@@ -55,7 +69,8 @@ def RouterAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
   # Get LLM response
   # response = llm.invoke([sys_msg] + messages)
-  response = llm.invoke([sys_msg] + messages)
+  # response = llm.invoke([sys_msg] + messages)
+  response = llm.invoke([sys_msg, message])
 
 #   messages.append(response)
 

@@ -253,7 +253,7 @@ You are an agent designed to interact with a SQL database.
 #     )  
 
 
-def get_router_system_message(plan: str, feedback: str = "No feedback available yet") -> SystemMessage:
+def get_router_system_message() -> SystemMessage:
   """
   Creates the system message for the router agent.
   """
@@ -261,12 +261,6 @@ def get_router_system_message(plan: str, feedback: str = "No feedback available 
       content=f"""You are a router. Your task is to route the conversation to the next agent based on the plan provided by the planner and the feedback of all the agents.
 
 You must choose one of the following agents: planner, web_scraper, sql_agent, reviewer.
-
-Here is the plan provided by the planner:
-Plan: {plan}
-
-Here is the feedback provided by the agents:
-Feedback: {feedback}
 
 ### Criteria for Choosing the Next Agent:
 
@@ -281,8 +275,41 @@ IMPORTANT: You must respond with a valid JSON object in the following format:
   "command": "specific_command_or_action"
 }}
 
-Where agent_name must be one of: planner, web_scraper, sql_agent, reviewer"""
+Where agent_name must be one of: planner, web_scraper, sql_agent, reviewer
+"""
   )
+
+
+# def get_router_system_message(plan: str, feedback: str = "No feedback available yet") -> SystemMessage:
+#   """
+#   Creates the system message for the router agent.
+#   """
+#   return SystemMessage(
+#       content=f"""You are a router. Your task is to route the conversation to the next agent based on the plan provided by the planner and the feedback of all the agents.
+
+# You must choose one of the following agents: planner, web_scraper, sql_agent, reviewer.
+
+# Here is the plan provided by the planner:
+# Plan: {plan}
+
+# Here is the feedback provided by the agents:
+# Feedback: {feedback}
+
+# ### Criteria for Choosing the Next Agent:
+
+# - **planner**: If the plan is incomplete, unclear, or requires further refinement or decomposition into smaller, actionable steps.
+# - **web_scraper**: If the plan involves collecting or extracting data from websites or web pages.
+# - **sql_agent**: If the plan involves executing SQL queries of your Procore database (the following data tables available: users).
+# - **reviewer**: If the plan involves reviewing, verifying, or validating content, results, or previous actions for accuracy and compliance.
+
+# IMPORTANT: You must respond with a valid JSON object in the following format:
+# {{
+#   "next_agent": "agent_name",
+#   "command": "specific_command_or_action"
+# }}
+
+# Where agent_name must be one of: planner, web_scraper, sql_agent, reviewer"""
+#   )
 
 
 def get_reviewer_system_message():
