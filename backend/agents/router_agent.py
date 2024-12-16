@@ -54,7 +54,9 @@ def RouterAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 #   messages.append(message)
 
   # Get LLM response
+  # response = llm.invoke([sys_msg] + messages)
   response = llm.invoke([sys_msg] + messages)
+
 #   messages.append(response)
 
 

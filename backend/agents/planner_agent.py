@@ -16,7 +16,7 @@ import logging
 # search = get_search_tool()
 
 # Initialize LLM using function from openai_models.py
-llm = load_openai_model(model="gpt-4o")
+llm = load_openai_model()
 # users_tools=[create_user, get_users]
 # projects_tools=[create_project, get_projects, rename_project]
 # database_tools=[sync_users_from_procore]

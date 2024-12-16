@@ -90,7 +90,7 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
 
   # Create system message
-  sys_msg = get_sql_agent_system_message(dialect="SQLite", top_k=20)#, command=command)
+  sys_msg = get_sql_agent_system_message(dialect="SQLite", top_k=20) #, command=command)
 
 
   try:
@@ -99,7 +99,38 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
     #   response = llm_with_tools.invoke([sys_msg] + [command] + sql_agent_messages)
       response = llm_with_tools.invoke([sys_msg] + sql_agent_messages + [command])
 
+      tool_name=None
+      tool_args=None
+      
+      feedback_message = f"{response.content}"
 
+    #   # Check if 'tool_calls' exists and is not empty at the top level
+    #   if hasattr(response, "tool_calls") and response.tool_calls:
+    #       tool_calls = response.tool_calls
+    #       tool_name = tool_calls[0]["name"]
+    #       tool_args= tool_calls[0]["args"]
+
+  
+      # Check if 'tool_calls' exists and is not empty at the top level
+      if hasattr(response, "tool_calls") and response.tool_calls:
+          tool_calls = response.tool_calls
+        #   feedback_message = f"{response.content}"
+
+          # Loop through all tool calls to append their details to the feedback message
+          for call in tool_calls:
+              tool_name = call.get("name")
+              tool_args = call.get("args")
+              
+              if tool_name:
+                  feedback_message += f" calling the {tool_name} tool"
+              if tool_args:
+                  feedback_message += f" with the following arguments: {tool_args}"
+
+
+
+    #   if "additional_kwargs" in response and "tool_calls" in response["additional_kwargs"]:
+    #     tool_calls = response["additional_kwargs"]["tool_calls"]
+    #     tool_name = tool_calls[0]["function"]["name"]
       return {
           # "messages": [response],
           "sql_agent_messages":[response],
@@ -113,7 +144,8 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
           "feedback": [{
               "agent": "sql_agent",
               "command":command,
-              "response": f"{response.content}",
+              "response": feedback_message,
+              # "response": f"{response.content}" + (f" calling the {tool_name} tool" if tool_name else "") + (f" with the following arguments: {tool_args}" if tool_args else ""),
               "status": "Success",
           }]
       }
