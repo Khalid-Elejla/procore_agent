@@ -1,11 +1,40 @@
 # states.py
 
-from typing import TypedDict, Annotated, List, Tuple, Union
+from typing import TypedDict, Annotated, List, Tuple, Union, Optional, Dict
 from langchain_core.messages import AnyMessage
 import operator
 from langgraph.graph import START, StateGraph, END
 import json
+import pandas as pd
 
+
+#=================================================Start SQL=================================================#
+# class TableSchema(TypedDict):
+#     columns: List[str]
+#     dtypes: Dict[str, str]
+#     description: Optional[str]
+
+# class TableState(TypedDict):
+#     data: pd.DataFrame
+#     schema: TableSchema
+#     comment: Optional[str]
+#     last_updated: str  # ISO format timestamp
+
+# class SQLState(TypedDict):
+#     tables: Dict[str, TableState]  # Map of table_name to TableState
+#     available_tables: List[str]    # List of queryable table names
+#     error: Optional[str]
+
+
+class TableState(TypedDict):
+    data: pd.DataFrame
+    table_name: str
+    comment: Optional[str]
+
+class SQLState(TypedDict):
+    tables: Dict[str, TableState]  # Map of table_name to TableState
+    error: Optional[str]
+#=================================================End SQL=================================================#
 class PlanStep(TypedDict):
   step: int
   action: str
@@ -33,6 +62,7 @@ class GraphState(TypedDict):
   answer:AnswerState
   messages: Annotated[List[AnyMessage], operator.add]
   sql_agent_messages: Annotated[list[AnyMessage], operator.add]
+  sql_state: SQLState
   # sql_agent_messages: Annotated[List[AnyMessage], operator.add]
 
 class AgentGraphState(TypedDict):
