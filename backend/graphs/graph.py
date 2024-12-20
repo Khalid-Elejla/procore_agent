@@ -78,7 +78,7 @@ def build_graph():
 
         builders = StateGraph(GraphState)
 
-        builders.add_edge(START, "planner")
+        
 
         builders.add_node("planner", PlannerAgent)
         builders.add_node("router", RouterAgent)
@@ -87,6 +87,7 @@ def build_graph():
         # builders.add_node("sql_tools", ToolNode(database_tools))
         builders.add_node("sql_tools", CustomToolNode(database_tools, message_key="sql_agent_messages"))
 
+        builders.add_edge(START, "planner")
         builders.add_edge("planner", "router")
 
         builders.add_conditional_edges("router", route)
