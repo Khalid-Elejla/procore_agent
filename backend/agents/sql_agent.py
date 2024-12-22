@@ -6,19 +6,24 @@ from ..prompts.prompts import get_sql_agent_system_message
 from ..tools.utils_tools import get_search_tool
 from ..tools.procore_toolset.users_tools import create_user, get_users
 from ..tools.database_tools import sync_users_from_procore
+from ..tools.CustomSQLDatabaseToolkit import CustomSQLDatabaseToolkit
+from ..tools.CustomQuerySQLDataBaseTool import DataFrameManager
 
 from typing import TypedDict, Annotated, List, Tuple, Dict, Any
 
 from langchain_community.utilities import SQLDatabase
-from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
+
+# from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 
 
 # Initialize LLM using function from openai_models.py
 llm = load_openai_model()
-
+df_manager = DataFrameManager()
 
 db = SQLDatabase.from_uri("sqlite:///./backend/procore_db.sqlite")
-toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+# toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+toolkit = CustomSQLDatabaseToolkit(db=db, llm=llm, tools_kwargs={"df_manager": df_manager})  # df_manager only needed here)
+
 
 database_tools = toolkit.get_tools()
 llm_with_tools = llm.bind_tools(database_tools)
@@ -211,7 +216,6 @@ llm_with_tools = llm.bind_tools(database_tools)
 
 from typing import TypedDict, Dict, Optional
 import pandas as pd
-from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from langchain.schema import SystemMessage, HumanMessage
 from ..states.state import TableState
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
@@ -252,7 +256,9 @@ def parse_agent_messages(messages):
             print(f"Unknown message type: {msg}\n")
 
 #=============================================================================
+# def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
+
     """
     SQL agent that executes database queries and returns structured results using SQLDatabaseToolkit.
     """

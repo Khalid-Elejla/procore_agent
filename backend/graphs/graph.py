@@ -20,8 +20,9 @@ from ..agents.sql_agent import SQLAgent
 from ..agents.reviewer_agent import ReviewerAgent
 
 from langchain_community.utilities import SQLDatabase
-from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
-
+# from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
+from ..tools.CustomSQLDatabaseToolkit import CustomSQLDatabaseToolkit
+from ..tools.CustomQuerySQLDataBaseTool import DataFrameManager
 
 # import logging
 # logging.basicConfig(level=logging.DEBUG)
@@ -65,7 +66,9 @@ def build_graph():
         llm = load_openai_model()
         # logging.debug("Initializing SQLDatabaseToolkit...")
         db = SQLDatabase.from_uri("sqlite:///backend\\procore_db.sqlite")
-        toolkit = SQLDatabaseToolkit(db=db, llm=load_openai_model(temperature=0))
+        # toolkit = SQLDatabaseToolkit(db=db, llm=load_openai_model(temperature=0))
+        
+        toolkit = CustomSQLDatabaseToolkit(db=db, llm=load_openai_model(temperature=0))
 
         # logging.debug("Fetching tools from toolkit...")
         langchain_sql_toolbox = toolkit.get_tools()
