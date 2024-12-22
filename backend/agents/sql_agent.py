@@ -6,8 +6,8 @@ from ..prompts.prompts import get_sql_agent_system_message
 from ..tools.utils_tools import get_search_tool
 from ..tools.procore_toolset.users_tools import create_user, get_users
 from ..tools.database_tools import sync_users_from_procore
-from ..tools.CustomSQLDatabaseToolkit import CustomSQLDatabaseToolkit
-from ..tools.CustomQuerySQLDataBaseTool import DataFrameManager
+from ..tools.database_toolkit import CustomSQLDatabaseToolkit
+from ..tools.dataframe_manager import DataFrameManager
 
 from typing import TypedDict, Annotated, List, Tuple, Dict, Any
 

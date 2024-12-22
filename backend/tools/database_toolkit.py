@@ -1,9 +1,9 @@
 from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 from typing import List
 from langchain.tools import BaseTool
-from .CustomQuerySQLDataBaseTool import CustomQuerySQLDataBaseTool
+from .db_query_tool import CustomQuerySQLDataBaseTool
 from langchain_community.tools.sql_database.tool import QuerySQLDataBaseTool
-from .CustomQuerySQLDataBaseTool import DataFrameManager
+from .dataframe_manager import DataFrameManager
 
 df_manager=DataFrameManager()
 

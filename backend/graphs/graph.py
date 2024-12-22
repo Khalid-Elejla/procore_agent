@@ -21,54 +21,22 @@ from ..agents.reviewer_agent import ReviewerAgent
 
 from langchain_community.utilities import SQLDatabase
 # from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
-from ..tools.CustomSQLDatabaseToolkit import CustomSQLDatabaseToolkit
-from ..tools.CustomQuerySQLDataBaseTool import DataFrameManager
+from ..tools.database_toolkit import CustomSQLDatabaseToolkit
+
+from ..tools.dataframe_manager import DataFrameManager
 
 # import logging
 # logging.basicConfig(level=logging.DEBUG)
 
-
-# from pydantic import BaseModel
-# from langchain_core.messages import (AnyMessage,)
-# from typing import (Any,Union, Literal)
-
-# def tools_condition(
-#     state: Union[list[AnyMessage], dict[str, Any], BaseModel],
-# ) -> Literal["tools", "__end__"]:
-#         """Use in the conditional_edge to route to the ToolNode if the last message
-
-#         has tool calls. Otherwise, route to the end.
-
-#         Args:
-#             state (Union[list[AnyMessage], dict[str, Any], BaseModel]): The state to check for
-#                 tool calls. Must have a list of messages (MessageGraph) or have the
-#                 "messages" key (StateGraph).
-
-#         Returns:
-#             The next node to route to.
-#         """
-#         if isinstance(state, list):
-#             ai_message = state[-1]
-#         elif isinstance(state, dict) and (messages := state.get("sql_agent_messages", [])):
-#             ai_message = messages[-1]
-#         elif messages := getattr(state, "sql_agent_messages", []):
-#             ai_message = messages[-1]
-#         else:
-#             raise ValueError(f"No messages found in input state to tool_edge: {state}")
-#         if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:
-#             return "tools"
-#         return "__end__"
-
-
-
 def build_graph():
     try:
         llm = load_openai_model()
+        df_manager = DataFrameManager()
         # logging.debug("Initializing SQLDatabaseToolkit...")
         db = SQLDatabase.from_uri("sqlite:///backend\\procore_db.sqlite")
         # toolkit = SQLDatabaseToolkit(db=db, llm=load_openai_model(temperature=0))
         
-        toolkit = CustomSQLDatabaseToolkit(db=db, llm=load_openai_model(temperature=0))
+        toolkit = CustomSQLDatabaseToolkit(db=db, llm=load_openai_model(temperature=0), tools_kwargs={"df_manager": df_manager})
 
         # logging.debug("Fetching tools from toolkit...")
         langchain_sql_toolbox = toolkit.get_tools()
