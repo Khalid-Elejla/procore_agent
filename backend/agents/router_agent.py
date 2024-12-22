@@ -53,6 +53,9 @@ def RouterAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
   # Create a structured prompt that includes all context
   router_prompt = f"""
+  here is the user original query
+  query: {query}
+
   Here is the plan provided by the planner:
   Plan: {plan}
 
