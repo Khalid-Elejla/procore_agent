@@ -152,17 +152,18 @@ class CustomQuerySQLDataBaseTool(QuerySQLDataBaseTool):
     def __init__(self, db, df_manager, *args, **kwargs):
         super().__init__(db=db, *args, **kwargs)
         self.df_manager = df_manager  # Pass the DataFrameManager instance
-        self.description: str = """Executes a SQL query, retrieves results, converts them into a Pandas DataFrame, and stores the DataFrame in memory with a unique ID.
-                                    Returns:
-                                    content: Status and summary of the query execution.
-                                    artifact: Metadata including:
-                                    df_id: DataFrame unique identifier
-                                    rows: Number of rows retrieved
-                                    columns: Column names
-                                    preview: First 2 rows of data
-                                    Errors will return a message for verification and rewriting.
-                                    """
-
+        self.description: str = """
+        Executes a SQL query, retrieves results, converts them into a Pandas DataFrame, and stores the DataFrame in memory with a unique ID.
+        Returns:
+            content: Status and summary of the query execution.
+            artifact: Metadata including:
+            df_id: DataFrame unique identifier
+            rows: Number of rows retrieved
+            columns: Column names
+            preview: First 2 rows of data
+            comments: comments about the DataFrame
+            Errors will return a message for verification and rewriting.
+        """
         self.response_format: str = "content_and_artifact"
 
 
@@ -188,12 +189,26 @@ class CustomQuerySQLDataBaseTool(QuerySQLDataBaseTool):
 
         # Store DataFrame in memory
         df_id = self.df_manager.store_df(df)
+        preview=df.head(2).to_dict()
 
-        content=f"Query executed successfully. Retrieved {len(df)} rows with columns: {', '.join(df.columns)}"
+        # content=f"Query executed successfully. Retrieved {len(df)} rows with columns: {', '.join(df.columns)}. DataFrame saved with ID: {df_id}. You can retrieve it using this ID for further processing."
+        content=f"""
+        Query executed successfully.
+        DataFrame saved with ID: {df_id}, so you can retrieve the full DataFrame using this ID for further processing."
+        here is preview of the DataFrame:
+            {preview}.
+        """
         artifact= {
+                    "description": f"Results of query: {query}",
                     "df_id": df_id,
                     "rows": len(df),
                     "columns": list(df.columns),
-                    "preview": df.head(2).to_dict()  # Small preview for verification
+                    "preview": preview,  # Small preview for verification
+                    "comments": None
         }
+
+
+
+        # graph.state.append("df_artifacts", artifact)
+        
         return content, artifact
