@@ -323,10 +323,10 @@ def authenticate():
   current_url = st.get_option("server.baseUrlPath")
 
   if "streamlit.app" in current_url:
-      logging.error("yes",current_url)
+    #   logging.error(f"yes:{current_url}")
       REDIRECT_URI = os.getenv("PRODUCTION_REDIRECT_URI")
   else:
-      logging.error("no",current_url)
+    # logging.error(f"no: {current_url}")
       REDIRECT_URI = os.getenv("LOCAL_REDIRECT_URI")
 
   
@@ -349,8 +349,8 @@ def authenticate():
 
   # Create the authorization URL
   auth_url = f"{AUTHORIZATION_URL}?client_id={PROCORE_CLIENT_ID}&response_type=code&redirect_uri={REDIRECT_URI}"
-  logging.error(REDIRECT_URI)
-  logging.error(auth_url)
+#   logging.error(f"REDIRECT_URI")
+#   logging.error(f"auth_url")
 
   # Check if code is in query params
   query_params = st.query_params

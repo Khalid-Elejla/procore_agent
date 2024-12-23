@@ -27,7 +27,7 @@ def initialize_db_tools(
     """
     try:
         # Initialize the LLM (Language Learning Model) with the specified model name
-        llm = load_openai_model(model_name=model_name, temperature=temperature)
+        llm = load_openai_model(model=model_name, temperature=temperature)
 
         # Use provided DataFrame Manager or initialize a default one
         df_manager = df_manager if df_manager else DataFrameManager()
@@ -41,14 +41,14 @@ def initialize_db_tools(
             llm=llm,
             tools_kwargs={"df_manager": df_manager}  # Pass DataFrame manager as a tool argument
         )
-
+        logging.error(f"Error initializing tools: {toolkit}")
         # Fetch the tools from the custom toolkit
-        langchain_sql_toolbox = toolkit.get_tools()
+        sql_toolbox = toolkit.get_tools()
 
         # # Return the set of tools that can be used for database operations
         # logging.debug("Tools successfully initialized.")
         
-        return langchain_sql_toolbox
+        return sql_toolbox
 
     except Exception as e:
         logging.error(f"Error initializing tools: {e}")

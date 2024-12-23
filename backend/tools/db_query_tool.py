@@ -1,7 +1,7 @@
 from langchain.tools import BaseTool
 from langchain_core.tools import Tool
 from typing import Any, Optional, Dict
-from langchain.tools.sql_database.tool import QuerySQLDataBaseTool
+from langchain_community.tools import QuerySQLDataBaseTool
 from langchain_core.callbacks import CallbackManagerForToolRun
 import pandas as pd
 
@@ -145,31 +145,25 @@ from pydantic import Field
 
 
 class CustomQuerySQLDataBaseTool(QuerySQLDataBaseTool):
-    description: str ="""Execute a SQL query against the database and return both results and a managed DataFrame artifact.
-                        This tool extends the basic SQL query functionality by:
-                        1. Executing the SQL query and retrieving results
-                        2. Converting results into a pandas DataFrame
-                        3. Storing the DataFrame in memory with a unique ID
-                        4. Returning both query results and DataFrame metadata
 
-                        Returns:
-                            tuple: (content, artifact) where:
-                                - content: String describing query execution status and result summary
-                                - artifact: Dict containing:
-                                    - df_id: Unique identifier for stored DataFrame
-                                    - rows: Number of rows retrieved
-                                    - columns: List of column names
-                                    - preview: Sample of first 2 rows
-
-                        If the query is incorrect, an error message will be returned.
-                        For error cases, verify and rewrite the query before trying again.
-                        """
-    response_format: str = "content_and_artifact"
+    
     df_manager: Any = Field(default=None, exclude=True)
     
     def __init__(self, db, df_manager, *args, **kwargs):
         super().__init__(db=db, *args, **kwargs)
         self.df_manager = df_manager  # Pass the DataFrameManager instance
+        self.description: str = """Executes a SQL query, retrieves results, converts them into a Pandas DataFrame, and stores the DataFrame in memory with a unique ID.
+                                    Returns:
+                                    content: Status and summary of the query execution.
+                                    artifact: Metadata including:
+                                    df_id: DataFrame unique identifier
+                                    rows: Number of rows retrieved
+                                    columns: Column names
+                                    preview: First 2 rows of data
+                                    Errors will return a message for verification and rewriting.
+                                    """
+
+        self.response_format: str = "content_and_artifact"
 
 
     def _run(

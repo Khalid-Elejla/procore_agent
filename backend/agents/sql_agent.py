@@ -13,19 +13,29 @@ from typing import TypedDict, Annotated, List, Tuple, Dict, Any
 
 from langchain_community.utilities import SQLDatabase
 
+from ..tools.initialize_tools import initialize_db_tools
+
+
 # from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 
 
-# Initialize LLM using function from openai_models.py
-llm = load_openai_model()
+# # Initialize LLM using function from openai_models.py
+# llm = load_openai_model()
+# df_manager = DataFrameManager()
+
+# db = SQLDatabase.from_uri("sqlite:///./backend/procore_db.sqlite")
+# # toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+# toolkit = CustomSQLDatabaseToolkit(db=db, llm=llm, tools_kwargs={"df_manager": df_manager})  # df_manager only needed here)
+
+
+# database_tools = toolkit.get_tools()
+
+
+
+
 df_manager = DataFrameManager()
-
-db = SQLDatabase.from_uri("sqlite:///./backend/procore_db.sqlite")
-# toolkit = SQLDatabaseToolkit(db=db, llm=llm)
-toolkit = CustomSQLDatabaseToolkit(db=db, llm=llm, tools_kwargs={"df_manager": df_manager})  # df_manager only needed here)
-
-
-database_tools = toolkit.get_tools()
+database_tools = initialize_db_tools(db_uri="sqlite:///backend\\procore_db.sqlite", df_manager= df_manager)
+llm = load_openai_model()
 llm_with_tools = llm.bind_tools(database_tools)
 
 #=========================================================================

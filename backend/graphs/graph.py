@@ -24,28 +24,33 @@ from langchain_community.utilities import SQLDatabase
 from ..tools.database_toolkit import CustomSQLDatabaseToolkit
 
 from ..tools.dataframe_manager import DataFrameManager
-
+from ..tools.initialize_tools import initialize_db_tools
 # import logging
-# logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.INFO)
 
 def build_graph():
     try:
-        llm = load_openai_model()
-        df_manager = DataFrameManager()
-        # logging.debug("Initializing SQLDatabaseToolkit...")
-        db = SQLDatabase.from_uri("sqlite:///backend\\procore_db.sqlite")
-        # toolkit = SQLDatabaseToolkit(db=db, llm=load_openai_model(temperature=0))
+
+        # llm = load_openai_model()
+        # df_manager = DataFrameManager()
+        # # logging.debug("Initializing SQLDatabaseToolkit...")
+        # db_uri = "sqlite:///backend\\procore_db.sqlite"
+        # # toolkit = SQLDatabaseToolkit(db=db, llm=load_openai_model(temperature=0))
         
-        toolkit = CustomSQLDatabaseToolkit(db=db, llm=load_openai_model(temperature=0), tools_kwargs={"df_manager": df_manager})
+        # toolkit = CustomSQLDatabaseToolkit(db=db, llm=load_openai_model(temperature=0), tools_kwargs={"df_manager": df_manager})
 
-        # logging.debug("Fetching tools from toolkit...")
-        langchain_sql_toolbox = toolkit.get_tools()
-        # logging.debug(f"Tools fetched: {langchain_sql_toolbox}")
+        # # logging.debug("Fetching tools from toolkit...")
+        # langchain_sql_toolbox = toolkit.get_tools()
+        # # logging.debug(f"Tools fetched: {langchain_sql_toolbox}")
 
-        # database_tools = [sync_users_from_procore] + langchain_sql_toolbox
-        database_tools = toolkit.get_tools()
+        # # database_tools = [sync_users_from_procore] + langchain_sql_toolbox
+        # database_tools = toolkit.get_tools()
 
-        # logging.debug(f"Final database tools: {database_tools}")
+        df_manager = DataFrameManager()
+        database_tools = initialize_db_tools(db_uri="sqlite:///backend\\procore_db.sqlite", df_manager= df_manager)
+
+        
+        # logging.info(f"Final database tools: {database_tools}")
 
         builders = StateGraph(GraphState)
 
