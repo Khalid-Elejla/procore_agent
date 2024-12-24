@@ -63,8 +63,12 @@ def ReviewerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
       # Parse the JSON response
       content_dict = json.loads(result.content)
 
+
       # Extract only the final_output from the review
       final_output = content_dict["review"]["final_output"]
+    #   if not isinstance(final_output, str):
+    #       final_output = json.dumps(final_output)
+
 
       return {
           "messages": [HumanMessage(content=final_output)],

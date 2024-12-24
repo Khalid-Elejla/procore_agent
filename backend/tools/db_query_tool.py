@@ -142,10 +142,7 @@ class CustomQuerySQLDataBaseTool2(QuerySQLDataBaseTool):
 
 from pydantic import Field
 
-
-
 class CustomQuerySQLDataBaseTool(QuerySQLDataBaseTool):
-
     
     df_manager: Any = Field(default=None, exclude=True)
     
@@ -153,17 +150,17 @@ class CustomQuerySQLDataBaseTool(QuerySQLDataBaseTool):
         super().__init__(db=db, *args, **kwargs)
         self.df_manager = df_manager  # Pass the DataFrameManager instance
         self.description: str = """
-        Executes a SQL query, retrieves results, converts them into a Pandas DataFrame, and stores the DataFrame in memory with a unique ID.
-        Returns:
-            content: Status and summary of the query execution.
-            artifact: Metadata including:
-            df_id: DataFrame unique identifier
-            rows: Number of rows retrieved
-            columns: Column names
-            preview: First 2 rows of data
-            comments: comments about the DataFrame
-            Errors will return a message for verification and rewriting.
-        """
+    Executes a SQL query, retrieves results, converts them into a Pandas DataFrame, and stores the DataFrame in memory with a unique ID.
+    Returns:
+        content: Status and summary of the query execution.
+        artifact: Metadata including:
+        df_id: DataFrame unique identifier
+        rows: Number of rows retrieved
+        columns: Column names
+        preview: First 2 rows of data
+        comments: comments about the DataFrame
+        Errors will return a message for verification and rewriting.
+    """
         self.response_format: str = "content_and_artifact"
 
 

@@ -245,11 +245,11 @@ def get_current_url():
     
   try:
       current_url = st.query_params.get('_stcore_url_', [''])[0]
-      logging.error("yesooooooo",current_url)
+      # logging.error("yesooooooo",current_url)
 
   except:
       current_url = ''
-      logging.error("Noooooooo",current_url)
+      # logging.error("Noooooooo",current_url)
 
       
   return current_url

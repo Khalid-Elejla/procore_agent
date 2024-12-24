@@ -41,9 +41,9 @@ def initialize_db_tools(
             llm=llm,
             tools_kwargs={"df_manager": df_manager}  # Pass DataFrame manager as a tool argument
         )
-        logging.error(f"Error initializing tools: {toolkit}")
+        # logging.error(f"Error initializing tools: {toolkit}")
         # Fetch the tools from the custom toolkit
-        sql_toolbox = toolkit.get_tools()
+        sql_toolbox = toolkit.get_tools(df_manager)
 
         # # Return the set of tools that can be used for database operations
         # logging.debug("Tools successfully initialized.")
@@ -51,5 +51,5 @@ def initialize_db_tools(
         return sql_toolbox
 
     except Exception as e:
-        logging.error(f"Error initializing tools: {e}")
+        # logging.error(f"Error initializing tools: {e}")
         return None

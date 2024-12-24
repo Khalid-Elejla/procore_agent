@@ -8,7 +8,7 @@ from ..tools.procore_toolset.users_tools import create_user, get_users
 from ..tools.database_tools import sync_users_from_procore
 from ..tools.database_toolkit import CustomSQLDatabaseToolkit
 from ..tools.dataframe_manager import DataFrameManager
-
+import json
 from typing import TypedDict, Annotated, List, Tuple, Dict, Any
 
 from langchain_community.utilities import SQLDatabase
@@ -227,9 +227,10 @@ llm_with_tools = llm.bind_tools(database_tools)
 from typing import TypedDict, Dict, Optional
 import pandas as pd
 from langchain.schema import SystemMessage, HumanMessage
-from ..states.state import TableState
+from ..states.state import DataFrameMetadata
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
+import logging
 
 #=============================================================================
 def parse_agent_messages(messages):
@@ -278,25 +279,19 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
     sql_agent_messages = state["sql_agent_messages"]
 
     # Initialize SQL state if not exists
-    table_state : TableState = {}
+    data_frame_metadata : DataFrameMetadata = {}
+
+    import streamlit as st
+    # st.write("before trying1", sql_agent_messages)
 
     # Create system message
     sys_msg = get_sql_agent_system_message(dialect="SQLite", top_k=5)
 
     try:  
-
-        # context_message = HumanMessage(content=f"""
-        #     Previous interactions summary:
-        #     - previous messages: {sql_agent_messages}
-        #     - original command: {command}""")
-        
         response = llm_with_tools.invoke([sys_msg] + [command]+ sql_agent_messages )
         # response = llm_with_tools.invoke([sys_msg] + [context_message])
 
         feedback_message = f"{response.content}"
-
-
-
 
         # parse_agent_messages(sql_agent_messages)
         if hasattr(response, "tool_calls") and response.tool_calls:
@@ -312,65 +307,37 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
                 if tool_args:
                     feedback_message += f" with the following arguments: {tool_args}"
 
-        # last_sql_agent_message = sql_agent_messages[-1] if sql_agent_messages else None
-        # # # Handle different tool calls
-        # # if hasattr(last_sql_agent_message, "tool_call_id") and last_sql_agent_message.tool_call_id:
-        # if hasattr(last_sql_agent_message, "type") and last_sql_agent_message.type=="tool":
-        #     tool_name = last_sql_agent_message.name
 
-        #     table_state : TableState= {
-        #         "data": "query_result",
-        #         "table_name": "table_nnnnnnnnnnnnnn",
-        #         "comment": f"Query result from: ",#{tool_args.get('query')}",
-        #         "schema": "nnnnnnnnnnnn",#sql_state["tables"].get(table_name, {}).get("schema")
-        #         "status": "success"
-        #     }                    
-        #     if tool_name == "sql_db_query":
-        #         query_result=pd.eval(last_sql_agent_message.content)    
+        # Assuming the data is stored in a variable called `messages`
+        try:
+            last_ai_index = max(i for i, msg in enumerate(sql_agent_messages) if msg.type == "ai")
+            last_tool_messages = [msg for msg in sql_agent_messages[last_ai_index + 1:] if msg.type == "tool"]
+            st.write("last_tool_messages", last_tool_messages)
+        except:
+            last_tool_messages=[]
+            
+        for msg in last_tool_messages:
+            st.write("msg", msg)
+            if msg.name == "sql_db_query":
+                data_frame_metadata=msg.artifact
 
-        #         table_state : TableState= {
-        #             "data": "query_result",
-        #             "table_name": "table_name",
-        #             "comment": f"Query result from: ",#{tool_args.get('query')}",
-        #             "schema": "schemea",#sql_state["tables"].get(table_name, {}).get("schema")
-        #             "status": "success"
-        #         }
-        #     else:
-        #         table_state: TableState= {
-        #             "data": "query_result",
-        #             "table_name": "table_name",
-        #             "comment": f"Query result from: ",#{tool_args.get('query')}",
-        #             "schema": "schemea",#sql_state["tables"].get(table_name, {}).get("schema")
-        #             "status": "error"
-        #         }
-
-                # if tool_name == "sql_db_query":
-                #     # Execute query and store results
-                #     query_result = execute_tool_call(tool_name, tool_args)
-                #     if isinstance(query_result, pd.DataFrame):
-                #         # Try to extract table name from the query
-                #         table_name = extract_table_name_from_query(tool_args.get("query", ""))
-                #         if table_name:
-                #             sql_state["tables"][table_name] = {
-                #                 "data": query_result,
-                #                 "table_name": table_name,
-                #                 "comment": f"Query result from: {tool_args.get('query')}",
-                #                 "schema": sql_state["tables"].get(table_name, {}).get("schema")
-                #             }
-
-        # sql_state["tables"]["table_name"] = {
-        #     "data": "query_result",
-        #     "table_name": "table_name",
-        #     "comment": f"Query result from: ",#{tool_args.get('query')}",
-        #     "schema": "schemea"#sql_state["tables"].get(table_name, {}).get("schema")
+        # return {
+        #     "messages": [response],
+        #     "sql_agent_messages": [response],
+        #     "command": command,
+        #     "data_frames_metadata": [data_frame_metadata],
+        #     "feedback": [{
+        #         "agent": "sql_agent",
+        #         "command": command,
+        #         "response": feedback_message,
+        #         "status": "Success",
+        #     }]
         # }
-        # sql_state["status"] = "success"
-
-        return {
+            # Build the return dictionary
+        return_dict = {
             "messages": [response],
             "sql_agent_messages": [response],
             "command": command,
-            "sql_state": [table_state],
             "feedback": [{
                 "agent": "sql_agent",
                 "command": command,
@@ -378,7 +345,12 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
                 "status": "Success",
             }]
         }
-    
+
+        # Add data_frames_metadata only if data_frame_metadata is not empty
+        if data_frame_metadata:
+            return_dict["data_frames_metadata"] = [data_frame_metadata]
+
+        return return_dict
 
     except Exception as e:
         # sql_state["status"] = "error"
@@ -387,7 +359,6 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "sql_agent_messages": [error_msg],
             "command": command,
-            # "sql_state": [table_state],
             "feedback": [{
                 "status": "error",
                 "step": 2,
@@ -400,34 +371,3 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
                 }
             }]
         }
-
-# def extract_table_name_from_query(query: str) -> Optional[str]:
-#     """
-#     Extract table name from SQL query.
-#     Basic implementation - you might want to make this more robust.
-#     """
-#     query = query.lower()
-#     # Look for FROM clause
-#     if "from" in query:
-#         parts = query.split("from")[1].strip().split()
-#         if parts:
-#             # Remove any trailing clauses or whitespace
-#             table_name = parts[0].strip(';').strip()
-#             return table_name
-#     return None
-
-# def execute_tool_call(tool_name: str, tool_args: dict) -> Any:
-#     """
-#     Execute the tool call using SQLDatabaseToolkit.
-#     This is a placeholder - you'll need to implement the actual tool execution
-#     based on your setup.
-#     """
-#     # This should be implemented based on your actual toolkit setup
-#     # Example implementation:
-#     if tool_name == "list_tables":
-#         return toolkit.get_tools()[0].run()  # Returns list of tables
-#     elif tool_name == "schema":
-#         return toolkit.get_tools()[1].run(tool_args)  # Returns schema info
-#     elif tool_name == "sql_db_query":
-#         return toolkit.get_tools()[3].run(tool_args["query"])  # Returns DataFrame
-#     return None

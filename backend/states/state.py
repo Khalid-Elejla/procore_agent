@@ -25,12 +25,13 @@ import pandas as pd
 #     available_tables: List[str]    # List of queryable table names
 #     error: Optional[str]
 
-class TableState(TypedDict):
-    data: Optional[pd.DataFrame]
-    table_name: str
-    comment: Optional[str]
-    schema: Optional[str]  # Added to store table schema
-    status: Optional[str]
+class DataFrameMetadata(TypedDict):
+    description: str
+    df_id: str
+    rows: int
+    columns: List[str]
+    preview:Dict
+    comments: Optional[str]
 
 # class SQLState(TypedDict):
 #     tables: Dict[str, TableState]  # Map of table_name to TableState
@@ -63,7 +64,7 @@ class GraphState(TypedDict):
   answer:AnswerState
   messages: Annotated[List[AnyMessage], operator.add]
   sql_agent_messages: Annotated[list[AnyMessage], operator.add]
-  sql_state: Annotated[List[TableState], operator.add]
+  data_frames_metadata: Annotated[List[DataFrameMetadata], operator.add]
   # sql_agent_messages: Annotated[List[AnyMessage], operator.add]
 
 class AgentGraphState(TypedDict):

@@ -5,11 +5,13 @@ from .db_query_tool import CustomQuerySQLDataBaseTool
 from langchain_community.tools.sql_database.tool import QuerySQLDataBaseTool
 from .dataframe_manager import DataFrameManager
 
-df_manager=DataFrameManager()
+# df_manager=DataFrameManager()
 
 class CustomSQLDatabaseToolkit(SQLDatabaseToolkit):
 
-    def get_tools(self) -> List[BaseTool]:
+    # def get_tools(self) -> List[BaseTool]:
+    
+    def get_tools(self, df_manager) -> List[BaseTool]:
         """Get the tools in the toolkit with custom query tool."""
         # df_manager = DataFrameManager()
         tools = super().get_tools()

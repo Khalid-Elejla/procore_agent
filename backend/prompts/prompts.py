@@ -345,7 +345,7 @@ Provide your response in the following JSON format (no markdown, no json tags):
   "review": {
     "status": "success or failure",
     "comments": "Explanation of the review outcome",
-    "final_output": "Validated and refined output"
+    "final_output": "Validated and refined output (string format)"
   }
 }
 

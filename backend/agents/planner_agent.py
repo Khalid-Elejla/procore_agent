@@ -71,8 +71,8 @@ def PlannerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
         }
     except (json.JSONDecodeError, AssertionError) as e:
-        logging.error(f"Plan generation error: {e}")
-        logging.error(f"Raw response: {plan.content}")
+        # logging.error(f"Plan generation error: {e}")
+        # logging.error(f"Raw response: {plan.content}")
         return {
             "plan": [{"step": 1, "action": "Error in plan generation. Please refine your query.", "agent": "planner"}],
             "feedback": [{
