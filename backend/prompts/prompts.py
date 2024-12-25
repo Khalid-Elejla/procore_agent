@@ -159,16 +159,16 @@ Provide your response in the following JSON format:
 def get_sql_agent_system_message(dialect: str, top_k: int, command: str = None) -> SystemMessage:  
     return SystemMessage(  
         content=f"""
-
-You are an agent designed to interact with a SQL database.  
-
+You are an agent designed to interact with a SQL database, execute queries, and save the results as DataFrames in the DataFrame Manager, each identified by a unique DataFrame ID.
 # Your task is to:
 # 1. Check the available tables.
 # 2. Understand the user's question and detect the relevant tables.
 # 3. get the schemas of the related tables.
 # 4. Based on the user question and the schemas of the related tables specify query inputs (If the user's command doesn't match the existing tables or schemes (fields), retrieve the available relevant data and inform the user that the specific part of his request cannot be executed.)
 # 5. Create and execute a syntactically correct SQL query.
-# 6. Return the results in a clear format.
+# 6. Save the query results as a DataFrame in the DataFrame Manager with a unique id.
+# 7. Pass the unique DataFrame ID to other agents for further use.
+
 
 # Guidelines:  
 # - Create syntactically correct {dialect} queries  

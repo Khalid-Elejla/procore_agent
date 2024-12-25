@@ -287,6 +287,13 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
     # Create system message
     sys_msg = get_sql_agent_system_message(dialect="SQLite", top_k=5)
 
+
+    # context_message = HumanMessage(content=f"""
+    #     Previous interactions summary:
+    #     - original command: {command}
+    #     - previous messages: {sql_agent_messages}
+    #     """)
+
     try:  
         response = llm_with_tools.invoke([sys_msg] + [command]+ sql_agent_messages )
         # response = llm_with_tools.invoke([sys_msg] + [context_message])
@@ -312,12 +319,12 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
         try:
             last_ai_index = max(i for i, msg in enumerate(sql_agent_messages) if msg.type == "ai")
             last_tool_messages = [msg for msg in sql_agent_messages[last_ai_index + 1:] if msg.type == "tool"]
-            st.write("last_tool_messages", last_tool_messages)
+            # st.write("last_tool_messages", last_tool_messages)
         except:
             last_tool_messages=[]
             
         for msg in last_tool_messages:
-            st.write("msg", msg)
+            # st.write("msg", msg)
             if msg.name == "sql_db_query":
                 data_frame_metadata=msg.artifact
 
