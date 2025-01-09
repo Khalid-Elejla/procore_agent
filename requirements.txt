@@ -3,7 +3,7 @@ langchain
 langchain-community
 langchain-openai
 langchain-anthropic
-
+faiss-cpu
 openai
 python-dotenv
 pypdf

@@ -2,7 +2,7 @@
 __pycache__/
 *.pyc
 *.pyo
-
+rest_OAS_all.json
 # Virtual environment
 venv/
 env/

@@ -18,6 +18,7 @@ from ..agents.planner_agent import PlannerAgent
 from ..agents.router_agent import RouterAgent
 from ..agents.sql_agent import SQLAgent
 from ..agents.reviewer_agent import ReviewerAgent
+from ..agents.api_handler_agent import APIHandlerAgent
 
 from langchain_community.utilities import SQLDatabase
 # from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
@@ -60,6 +61,7 @@ def build_graph():
         builders.add_node("router", RouterAgent)
         builders.add_node("sql_agent", SQLAgent)
         builders.add_node("reviewer", ReviewerAgent)
+        builders.add_node("api_handler", APIHandlerAgent)
         # builders.add_node("sql_tools", ToolNode(database_tools))
         builders.add_node("sql_tools", CustomToolNode(database_tools, message_key="sql_agent_messages"))
 
@@ -79,7 +81,7 @@ def build_graph():
 
         builders.add_conditional_edges(
             "sql_agent",
-            lambda state: custom_tools_condition(state, message_key="sql_agent_messages"),              {
+            lambda state: custom_tools_condition(state, message_key="sql_agent_messages"),  {
                 "tools": "sql_tools",
                 "__end__": "router"
             }
