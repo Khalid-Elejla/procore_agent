@@ -49,18 +49,24 @@ class AnswerState(TypedDict):
     context: dict  # or specific context structure  
     metadata: dict[str, Union[bool, int, str]]  
 
-class AgentResponse(TypedDict):  
+class DBAgentResponse(TypedDict):  
     agent: str
     action: str
     response: str  # or Any depending on your response type  
     success: bool
 
+class AgentResponse(TypedDict):  
+    agent: str
+    action: str
+    response: str  # or Any depending on your response type  
+    success: bool
 class GraphState(TypedDict):
   query: str
   plan: List[PlanStep]
   command: str
   # current_task: AgentState
   feedback:Annotated[List[AgentResponse], operator.add]
+  db_agent_feedback:Annotated[List[str], operator.add]
   answer:AnswerState
   messages: Annotated[List[AnyMessage], operator.add]
   sql_agent_messages: Annotated[list[AnyMessage], operator.add]

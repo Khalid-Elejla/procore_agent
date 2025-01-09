@@ -190,7 +190,7 @@ class CustomQuerySQLDataBaseTool(QuerySQLDataBaseTool):
 
         # content=f"Query executed successfully. Retrieved {len(df)} rows with columns: {', '.join(df.columns)}. DataFrame saved with ID: {df_id}. You can retrieve it using this ID for further processing."
         content=f"""
-        Query executed successfully.
+        the following query: {query} executed successfully.
         DataFrame saved with ID: {df_id}, so you can retrieve the full DataFrame using this ID for further processing."
         here is preview of the DataFrame:
             {preview}.
