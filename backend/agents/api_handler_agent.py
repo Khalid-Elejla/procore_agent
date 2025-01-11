@@ -1,3 +1,4 @@
+from backend.tools.initialize_tools import initialize_api_tools
 from ..models.openai_models import load_openai_model  # Import the model loader
 
 # from ..states.state import GraphState, where_to_go
@@ -9,16 +10,30 @@ from ..tools.utils_tools import get_search_tool
 import json
 from typing import Dict, Any
 import logging
+import streamlit as st
 
 
 # Define search tool
 # search = get_search_tool()
 
-# Initialize LLM using function from openai_models.py
-llm = load_openai_model()
-
 
 def APIHandlerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
+
+
+    # Initialize LLM using function from openai_models.py
+    llm = load_openai_model()
+    api_spec_file = 'procore_api_spec.json'
+    overrides = {"servers": [{"url": "https://sandbox.procore.com"}]}
+
+    if 'access_token' not in st.session_state:
+        st.session_state.access_token = None
+    access_token = st.session_state.access_token
+
+    tools=initialize_api_tools(access_token, api_spec_file, overrides)
+
+    llm_with_tools = llm.bind_tools(tools)
+
+
     query = state["query"]
     messages = state["messages"]
     plan = state.get("plan", [])
@@ -28,8 +43,6 @@ def APIHandlerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
     # db_agent_feedback = state["db_agent_feedback"]
 
     sys_msg = get_api_handler_system_message()
-
-
 
     api_handler_prompt = f"""
   here is the user original query
@@ -52,7 +65,7 @@ def APIHandlerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
     message = HumanMessage(content=api_handler_prompt)
     
     try:
-        response = llm.invoke([sys_msg, message])
+        response = llm_with_tools.invoke([sys_msg, message])
 
         # Capture the model's response
         feedback_message = f"{response.content}"
@@ -87,10 +100,6 @@ def APIHandlerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
             ],
             "db_agent_feedback": [sql_feedback_message],
         }
-
-        # Include data_frames_metadata if available
-        if data_frame_metadata:
-            return_dict["data_frames_metadata"] = [data_frame_metadata]
 
         return return_dict
 
