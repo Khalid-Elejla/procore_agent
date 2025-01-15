@@ -1,4 +1,5 @@
-from backend.tools.initialize_tools import initialize_api_tools
+# from ..tools.initialize_tools import initialize_api_tools
+from ..tools.initialize_tools import initialize_api_tools
 from ..models.openai_models import load_openai_model  # Import the model loader
 
 # from ..states.state import GraphState, where_to_go
@@ -22,8 +23,9 @@ def APIHandlerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
     # Initialize LLM using function from openai_models.py
     llm = load_openai_model()
-    api_spec_file = 'procore_api_spec.json'
-    overrides = {"servers": [{"url": "https://sandbox.procore.com"}]}
+    api_spec_file = 'OAS.json'
+    base_url = "https://sandbox.procore.com"
+    overrides = {"servers": [{"url": base_url}]}
 
     if 'access_token' not in st.session_state:
         st.session_state.access_token = None
@@ -36,31 +38,62 @@ def APIHandlerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
     query = state["query"]
     messages = state["messages"]
-    plan = state.get("plan", [])
     command = state["command"]
-    feedback = state.get("feedback", [])
-    # sql_agent_messages = state["sql_agent_messages"]
-    # db_agent_feedback = state["db_agent_feedback"]
+    api_agent_messages = state["api_agent_messages"]
+    api_agent_feedback = state["api_agent_feedback"]
 
     sys_msg = get_api_handler_system_message()
 
+#================================================================================================
+    import yaml
+    from langchain_community.agent_toolkits.openapi.spec import reduce_openapi_spec
+
+    with open("procore_core_openapi.yaml", "r") as file:
+        raw_procore_api_spec = yaml.load(file, Loader=yaml.Loader)
+    
+    # relevent_endpoints = reduce_openapi_spec(raw_procore_api_spec).endpoints
+#================================================================================================
+    # Initialize feedback strings & metadata
+    api_feedback_message = ""
+
+    # Determine tool messages after the last AI response
+    try:
+        last_ai_index = max(
+            i for i, msg in enumerate(api_agent_messages) if msg.type == "ai"
+        )
+        last_tool_messages = [
+            msg
+            for msg in api_agent_messages[last_ai_index + 1:]
+            if msg.type == "tool"
+        ]
+    except:
+        st.write("jnnj")
+        last_tool_messages = []
+
+    # Process tool messages and gather feedback
+    for msg in last_tool_messages:
+        if msg.name == "sql_db_query":
+            data_frame_metadata = msg.artifact
+            api_feedback_message += f"\n tool output: {msg.content}"
+        else:
+            st.write(
+                "msggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+                msg.content,
+            )
+            api_feedback_message += f"\n tool output: {msg.content}"
+
+
     api_handler_prompt = f"""
   here is the user original query
-  query: {query}
+  - query: {query}
 
   - command to execute: {command}
+
+    Here is documentation on the API:
+    Base url: {base_url}
+    note that you can use the api call to get some messing values needed for the next api call
   
-  - feedback: {db_agent_feedback} + {sql_feedback_message}
-
-  Here is the feedback provided by the agents:
-  Feedback: {feedback}
-  
-
-  Here is documentation on the API:
-  Base url: {procore_api_spec.servers[0]['url']}
-  Endpoints: {procore_api_spec.endpoints}
-  note that you can use the api call to get some messing values needed for the next api call
-
+  - feedback: {api_agent_feedback} + {api_feedback_message}
   """
     message = HumanMessage(content=api_handler_prompt)
     
@@ -80,25 +113,25 @@ def APIHandlerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
                 if tool_name:
                     feedback_message += f"\nCalling the {tool_name} tool"
-                    sql_feedback_message += f"\nCalling the {tool_name} tool"
+                    api_feedback_message += f"\nCalling the {tool_name} tool"
                 if tool_args:
                     feedback_message += f" with the following arguments: {tool_args}"
-                    sql_feedback_message += f" with the following arguments: {tool_args}"
+                    api_feedback_message += f" with the following arguments: {tool_args}"
 
         # Build the return dictionary
         return_dict = {
             "messages": [response],
-            "sql_agent_messages": [response],
+            "api_agent_messages": [response],
             "command": command,
             "feedback": [
                 {
-                    "agent": "sql_agent",
+                    "agent": "api_handler",
                     "command": command,
                     "response": feedback_message,
                     "status": "Success",
                 }
             ],
-            "db_agent_feedback": [sql_feedback_message],
+            "api_agent_feedback": [api_feedback_message],
         }
 
         return return_dict
@@ -106,17 +139,17 @@ def APIHandlerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         error_msg = HumanMessage(content=str(e))
         return {
-            "sql_agent_messages": [error_msg],
+            "api_agent_messages": [error_msg],
             "command": command,
             "feedback": [
                 {
                     "status": "error",
                     "step": 2,
-                    "message": "SQL execution failed",
+                    "message": "API calling failed",
                     "result": {
                         "success": False,
                         "data": None,
-                        "message": f"Error executing SQL query: {str(e)}",
+                        "message": f"Error making API call: {str(e)}",
                         "error": str(e),
                     },
                 }

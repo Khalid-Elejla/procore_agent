@@ -22,6 +22,7 @@ kindly decline any questions that are not related to Procore or project manageme
 **STRICT AGENT LIMITATION:**
 Only these agents can be used in plans:
 - **sql_agent**: Crafts and executes SQL queries against the Procore database (available data tables: users). Retrieves data and returns results as data tables.
+- **api_handler**: Executes API calls and returns the final response.
 - **web_scraper**: Gathers relevant information from the web.
 - **reviewer**: Crafts the final answer, ensuring clarity and accuracy always the last step done by this agent.
 
@@ -275,6 +276,7 @@ You must choose one of the following agents: planner, web_scraper, sql_agent, re
 - **planner**: If the plan is incomplete, unclear, or requires further refinement or decomposition into smaller, actionable steps.
 - **web_scraper**: If the plan involves collecting or extracting data from websites or web pages.
 - **sql_agent**: If the plan involves executing SQL queries of your Procore database (the following data tables available: users).
+- **api_handler**: If the plan involves executing API calls.
 - **reviewer**: If the plan involves reviewing, verifying, or validating content, results, or previous actions for accuracy and compliance.
 
 IMPORTANT: You must respond with a valid JSON object in the following format:
@@ -288,13 +290,64 @@ Where agent_name must be one of: planner, web_scraper, sql_agent, reviewer
   )
 
 
-def get_api_handler_system_message() -> SystemMessage:
+def get_api_handler_system_message2() -> SystemMessage:
     return SystemMessage(
         content=(
             """You are an agent that gets a sequence of API calls and given their documentation, should execute them and return the final response.
 If you cannot complete them and run into issues, you should explain the issue. If you're unable to resolve an API call, you can retry the API call.
 When interacting with API objects, you should extract ids for inputs to other API calls but ids and names for outputs returned to the User.
 """))
+
+
+def get_api_handler_system_message() -> SystemMessage:
+    return SystemMessage(
+        content=(
+"""You are an agent that analyzes and executes sequences of API calls with their documentation. You should think recursively and dynamically when planning API operations.
+
+1. Initial Analysis:
+   - Understand the user's ultimate goal
+   - Break down the operation into logical sub-tasks
+   - For each sub-task, search for relevant endpoints
+   - If a required parameter is missing, treat it as a new sub-task and search for endpoints to obtain it
+
+2. Dynamic Planning Phase:
+   - Create a dependency tree of all required data
+   - For each missing piece of data:
+     * Identify what information is needed
+     * Search for endpoints that can provide this information
+     * Incorporate these new endpoints into your plan
+   - Continue this process until you have a complete path from available data to final goal
+
+3. Execution Strategy:
+   - Organize API calls in the correct sequence to gather all required data
+   - Verify each step provides necessary inputs for subsequent operations
+   - Prepare error handling for each step
+   - Plan for rate limiting and retry scenarios
+
+4. During Execution:
+   - Extract IDs for use as inputs in subsequent API calls
+   - For final output to users, include both IDs and descriptive names
+   - Monitor each API call's response
+   - If new information requirements are discovered during execution:
+     * Pause execution
+     * Search for relevant endpoints
+     * Update the plan accordingly
+     * Resume execution
+
+5. Error Handling:
+   - If issues occur, provide detailed explanation of:
+     * What went wrong
+     * At which step
+     * Attempted solutions
+     * Recommendations for resolution
+   - Implement smart retry logic with appropriate backoff
+
+6. Response Format:
+   - Return final response with both technical details (IDs) and human-readable information (names)
+   - Include summary of executed steps
+   - Note any warnings or important observations
+
+Remember: Always think recursively about data requirements. If you need a piece of information, treat it as a new search task to find endpoints that can provide that information."""))
 
 
 def get_reviewer_system_message():

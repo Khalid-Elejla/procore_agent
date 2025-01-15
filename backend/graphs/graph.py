@@ -25,7 +25,8 @@ from langchain_community.utilities import SQLDatabase
 from ..tools.database_toolkit import CustomSQLDatabaseToolkit
 
 from ..tools.dataframe_manager import DataFrameManager
-from ..tools.initialize_tools import initialize_db_tools
+import streamlit as st
+from ..tools.initialize_tools import initialize_db_tools, initialize_api_tools
 # import logging
 # logging.basicConfig(level=logging.INFO)
 
@@ -48,9 +49,20 @@ def build_graph():
         # database_tools = toolkit.get_tools()
 
         df_manager = DataFrameManager()
-        database_tools = initialize_db_tools(db_uri="sqlite:///backend\\procore_db.sqlite", df_manager= df_manager)
 
+
+        # Initialize LLM using function from openai_models.py
+        llm = load_openai_model()
+        api_spec_file = 'OAS.json'
+        base_url = "https://sandbox.procore.com"
+        overrides = {"servers": [{"url": base_url}]}
+
+        if 'access_token' not in st.session_state:
+            st.session_state.access_token = None
+        access_token = st.session_state.access_token
         
+        database_tools = initialize_db_tools(db_uri="sqlite:///backend\\procore_db.sqlite", df_manager= df_manager)
+        api_tools = initialize_api_tools(access_token, api_spec_file, overrides)
         # logging.info(f"Final database tools: {database_tools}")
 
         builders = StateGraph(GraphState)
@@ -62,7 +74,7 @@ def build_graph():
         builders.add_node("sql_agent", SQLAgent)
         builders.add_node("reviewer", ReviewerAgent)
         builders.add_node("api_handler", APIHandlerAgent)
-        # builders.add_node("sql_tools", ToolNode(database_tools))
+        builders.add_node("api_tools", CustomToolNode(api_tools, message_key="api_agent_messages"))
         builders.add_node("sql_tools", CustomToolNode(database_tools, message_key="sql_agent_messages"))
 
         builders.add_edge(START, "planner")
@@ -86,7 +98,17 @@ def build_graph():
                 "__end__": "router"
             }
         )
+
+        builders.add_conditional_edges(
+            "api_handler",
+            lambda state: custom_tools_condition(state, message_key="api_agent_messages"),  {
+                "tools": "api_tools",
+                "__end__": "router"
+            }
+        )
+
         builders.add_edge("sql_tools", "sql_agent")
+        builders.add_edge("api_tools", "api_handler")
    
         builders.add_edge("reviewer", END)
 

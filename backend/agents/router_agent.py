@@ -80,6 +80,11 @@ def RouterAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
   # Parse the JSON response
   try:
+      
+      response.content = response.content.strip('`')
+      if response.content.startswith('json\n'):
+          response.content = response.content[5:]
+
       routing_decision = json.loads(response.content)
       next_agent= routing_decision["next_agent"]
       command= routing_decision["command"]
@@ -106,9 +111,9 @@ def RouterAgent(state: Dict[str, Any]) -> Dict[str, Any]:
           "next_agent": "planner",  # Default to planner if parsing fails
           "command": "Please provide a clear plan for the task",
           "feedback":[ {
-              "agent": "planner",
+              "agent": "router",
               "action": "Route the request to the most appropriate agent.",
-              "response": "Please provide a clear plan for the task",
+              "response": "routing to planner agent to provide a clear plan for the task",
               "status": "Error"
               }]
       }

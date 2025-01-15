@@ -3,6 +3,88 @@ from ..models.openai_models import load_openai_model
 from langchain_community.utilities import SQLDatabase
 from .dataframe_manager import DataFrameManager
 from .database_toolkit import CustomSQLDatabaseToolkit
+#================================================================================================
+from .procore_api_tools import HTTPRequestTool
+from .procore_api_tools import EndpointEmbeddingManager
+# from langchain_community.agent_toolkits.openapi.spec import reduce_openapi_spec
+from ..utils.helper_functions import enhanced_reduce_openapi_spec
+import yaml
+import streamlit as st
+import os
+import json
+from sentence_transformers import SentenceTransformer
+from typing import List
+import logging
+
+# Load the API specification from a YAML file
+def load_reduced_api_spec(file_path: str, overrides: dict = None) -> dict:
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File {file_path} does not exist.")
+    
+    with open(file_path, "r") as file:
+        if file_path.endswith(".yaml") or file_path.endswith(".yml"):
+            api_spec = yaml.load(file, Loader=yaml.Loader)
+        elif file_path.endswith(".json"):
+            api_spec = json.load(file)
+        else:
+            raise ValueError("Unsupported file format. Please provide a .yaml, .yml, or .json file.")
+
+    # Apply modifications if provided
+    if overrides:
+        for key, value in overrides.items():
+            api_spec[key] = value
+                
+    # Reduce the OpenAPI specification for use
+#    reduced_api_spec = reduce_openapi_spec(api_spec)
+    reduced_api_spec = enhanced_reduce_openapi_spec(api_spec, latest_version_only=True)
+
+    return reduced_api_spec
+
+
+def initialize_api_tools(
+    access_token : str = None,
+    api_spec_file: str = None,
+    overrides: dict = None, 
+):
+    headers= {"Authorization": f"Bearer {access_token}"}
+    http_tool = HTTPRequestTool(headers = headers)
+    
+
+    
+    # class BertEmbeddings:
+    #     def __init__(self, model_name: str = 'all-MiniLM-L6-v2'):
+    #         self.model = SentenceTransformer(model_name)
+
+    #     def embed_documents(self, texts: List[str]) -> List[List[float]]:
+    #         return self.model.encode(texts, convert_to_numpy=True)
+
+    #     def embed_query(self, text: str) -> List[float]:
+    #         return self.model.encode(text, convert_to_numpy=True)
+    
+    # bert_embeddings = BertEmbeddings()
+    # endpoints_manager = EndpointEmbeddingManager(embedding_model=bert_embeddings)
+    endpoints_manager = EndpointEmbeddingManager()
+
+
+
+    
+    try:
+        endpoints_manager.load_embeddings('endpoint_embeddings.pkl')
+    except FileNotFoundError:
+        # Initial embedding creation
+        # overrides = {"servers": [{"url": "https://sandbox.procore.com"}]}
+        reduced_api_spec = load_reduced_api_spec(api_spec_file, overrides)
+        endpoints = reduced_api_spec.endpoints # Your list of endpoints
+        endpoints_manager.embed_endpoints(endpoints)
+        endpoints_manager.save_embeddings('endpoint_embeddings.pkl')
+        #endpoints_manager.load_embeddings('endpoint_embeddings.pkl')
+
+    try:
+        api_toolbox=[http_tool._run, endpoints_manager.find_relevant_endpoints]
+        return api_toolbox
+    except Exception as e:
+        logging.error(f"Error initializing tools: {e}")
+        return None
 
 
 def initialize_db_tools(

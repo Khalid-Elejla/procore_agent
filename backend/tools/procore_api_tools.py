@@ -4,7 +4,7 @@ import requests
 import re
 
 from langchain_core.embeddings import Embeddings
-from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 import numpy as np
 import json
 import pickle
@@ -154,9 +154,15 @@ class EndpointEmbeddingManager:
 
     def create_endpoint_text(self, endpoint: Tuple) -> str:
         """Create a searchable text representation of the endpoint"""
-        method, path, description = endpoint[0], endpoint[1], endpoint[2]['description']
-        return f"{method} {path} {description}"
-
+        try:
+            url, description = endpoint[0], endpoint[1]
+            
+            #description = endpoint[2]['description']
+        except:
+            return "Error"
+        # return f"{method} {path} {description}"
+        return f"{url} {description}"
+    
     def embed_endpoints(self, endpoints: List[Tuple]) -> None:
         """Create embeddings for all endpoints"""
         self.endpoints = endpoints
@@ -189,9 +195,10 @@ class EndpointEmbeddingManager:
 
         dimension = self.endpoint_embeddings.shape[1]
         self.index = faiss.IndexFlatL2(dimension)
+        # self.index = faiss.IndexFlatIP(dimension)
         self.index.add(self.endpoint_embeddings)
 
-    def find_relevant_endpoints(self, query: str, k: int = 5) -> List[Tuple]:
+    def find_relevant_endpoints(self, query: str, k: int = 7) -> List[Tuple]:
         """Find k most relevant endpoints for a given query.
         Args:
             query (str): Natural language description of the desired endpoint functionality

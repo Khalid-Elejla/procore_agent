@@ -67,9 +67,11 @@ class GraphState(TypedDict):
   # current_task: AgentState
   feedback:Annotated[List[AgentResponse], operator.add]
   db_agent_feedback:Annotated[List[str], operator.add]
+  api_agent_feedback:Annotated[List[str], operator.add]
   answer:AnswerState
   messages: Annotated[List[AnyMessage], operator.add]
   sql_agent_messages: Annotated[list[AnyMessage], operator.add]
+  api_agent_messages: Annotated[list[AnyMessage], operator.add]
   data_frames_metadata: Annotated[List[DataFrameMetadata], operator.add]
   # sql_agent_messages: Annotated[List[AnyMessage], operator.add]
 
@@ -113,58 +115,126 @@ def where_to_go(state):
       # Handle missing keys in the JSON
       return "reviewer error"
 
+# def route(state: dict) -> str:
+#   """
+#   Routes to the next agent based on the last message in the conversation state.
+
+#   Args:
+#       state (dict): Current state containing messages and other information
+
+#   Returns:
+#       str: Name of the next agent to execute or 'router_error' if routing fails
+#   """
+#   try:
+#       # Get the last message from the state
+#       messages = state.get("messages", [])
+
+#       if not messages:
+#           return "planner"  # Default to planner if no messages
+
+#       last_message = messages[-1]
+
+#       # Extract the next_agent from the last message
+#       if hasattr(last_message, 'content'):
+#           # Handle different message content formats
+#           if isinstance(last_message.content, dict):
+#               next_agent = last_message.content.get("next_agent", "")
+#           elif isinstance(last_message.content, str):
+#               # Try to parse JSON if content is string
+#               try:
+#                   content_dict = json.loads(last_message.content)
+#                   next_agent = content_dict.get("next_agent", "")
+#               except json.JSONDecodeError:
+#                   next_agent = last_message.content
+#           else:
+#               return "router_error"
+#       else:
+#           return "router_error"
+
+#       # Route to appropriate agent
+#       valid_agents = {
+#           "planner": "planner",
+#           "web_scraper": "web_scraper",
+#           "sql_agent": "sql_agent",
+#           "reviewer": "reviewer"
+#       }
+
+#       # Check if next_agent matches any valid agent (case insensitive)
+#       for agent_key, agent_value in valid_agents.items():
+#           if agent_key.lower() in str(next_agent).lower():
+#               return agent_value
+
+#       # If no valid agent found
+#       return "router_error"
+
+#   except Exception as e:
+#       print(f"Routing error: {str(e)}")
+#       return "router_error"
+
+import json
+
 def route(state: dict) -> str:
-  """
-  Routes to the next agent based on the last message in the conversation state.
+    """
+    Routes to the next agent based on the last message in the conversation state.
 
-  Args:
-      state (dict): Current state containing messages and other information
+    Args:
+        state (dict): Current state containing messages and other information
 
-  Returns:
-      str: Name of the next agent to execute or 'router_error' if routing fails
-  """
-  try:
-      # Get the last message from the state
-      messages = state.get("messages", [])
+    Returns:
+        str: Name of the next agent to execute or 'router_error' if routing fails
+    """
+    try:
+        # Get the last message from the state
+        messages = state.get("messages", [])
 
-      if not messages:
-          return "planner"  # Default to planner if no messages
+        if not messages:
+            return "planner"  # Default to planner if no messages
 
-      last_message = messages[-1]
+        last_message = messages[-1]
 
-      # Extract the next_agent from the last message
-      if hasattr(last_message, 'content'):
-          # Handle different message content formats
-          if isinstance(last_message.content, dict):
-              next_agent = last_message.content.get("next_agent", "")
-          elif isinstance(last_message.content, str):
-              # Try to parse JSON if content is string
-              try:
-                  content_dict = json.loads(last_message.content)
-                  next_agent = content_dict.get("next_agent", "")
-              except json.JSONDecodeError:
-                  next_agent = last_message.content
-          else:
-              return "router_error"
-      else:
-          return "router_error"
+        # Extract the next_agent from the last message
+        next_agent = ""
 
-      # Route to appropriate agent
-      valid_agents = {
-          "planner": "planner",
-          "web_scraper": "web_scraper",
-          "sql_agent": "sql_agent",
-          "reviewer": "reviewer"
-      }
+        if hasattr(last_message, 'content'):
+            content = last_message.content
 
-      # Check if next_agent matches any valid agent (case insensitive)
-      for agent_key, agent_value in valid_agents.items():
-          if agent_key.lower() in str(next_agent).lower():
-              return agent_value
+            # Handle different content formats
+            if isinstance(content, dict):
+                next_agent = content.get("next_agent", "")
+            elif isinstance(content, str):
+                # Remove code block markers if present
+                content = content.strip('`')
+                if content.startswith('json\n'):
+                    content = content[5:]
 
-      # If no valid agent found
-      return "router_error"
+                # Try to parse as JSON
+                try:
+                    content_dict = json.loads(content)
+                    next_agent = content_dict.get("next_agent", "")
+                except json.JSONDecodeError:
+                    next_agent = content
+            else:
+                return "router_error"
+        else:
+            return "router_error"
 
-  except Exception as e:
-      print(f"Routing error: {str(e)}")
-      return "router_error"
+        # Route to appropriate agent
+        valid_agents = {
+            "planner": "planner",
+            "web_scraper": "web_scraper",
+            "sql_agent": "sql_agent",
+            "reviewer": "reviewer",
+            "api_handler": "api_handler"  # Added api_handler
+        }
+
+        # Check if next_agent matches any valid agent (case insensitive)
+        for agent_key, agent_value in valid_agents.items():
+            if agent_key.lower() in str(next_agent).lower():
+                return agent_value
+
+        # If no valid agent found
+        return "router_error"
+
+    except Exception as e:
+        print(f"Routing error: {str(e)}")
+        return "router_error"
