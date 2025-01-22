@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 *.pyo
 rest_OAS_all.json
+rest_OAS_all_postman.json
 # Virtual environment
 venv/
 env/

@@ -27,8 +27,11 @@ from ..tools.database_toolkit import CustomSQLDatabaseToolkit
 from ..tools.dataframe_manager import DataFrameManager
 import streamlit as st
 from ..tools.initialize_tools import initialize_db_tools, initialize_api_tools
-# import logging
-# logging.basicConfig(level=logging.INFO)
+import os
+from dotenv import load_dotenv
+
+import logging
+logging.basicConfig(level=logging.INFO)
 
 def build_graph():
     try:
@@ -61,10 +64,13 @@ def build_graph():
             st.session_state.access_token = None
         access_token = st.session_state.access_token
         
-        database_tools = initialize_db_tools(db_uri="sqlite:///backend\\procore_db.sqlite", df_manager= df_manager)
-        api_tools = initialize_api_tools(access_token, api_spec_file, overrides)
-        # logging.info(f"Final database tools: {database_tools}")
+        load_dotenv()
+        company_id=os.getenv("PROCORE_COMPANY_ID")
+        logging.info(f"Final database tools: {company_id}")
 
+        database_tools = initialize_db_tools(db_uri="sqlite:///backend\\procore_db.sqlite", df_manager= df_manager)
+        api_tools = initialize_api_tools(company_id, access_token, api_spec_file, overrides)
+        logging.info(f"Final database tools: {api_tools}")
         builders = StateGraph(GraphState)
 
         

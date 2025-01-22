@@ -267,156 +267,26 @@ def parse_agent_messages(messages):
             print(f"Unknown message type: {msg}\n")
 
 #=============================================================================
-# def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
-def SQLAgent2(state: Dict[str, Any]) -> Dict[str, Any]:
+def format_feedback(db_feedback, sql_feedback):
+    formatted_output = []
 
-    """
-    SQL agent that executes database queries and returns structured results using SQLDatabaseToolkit.
-    """
-    query = state["query"]
-    messages = state["messages"]
-    command = state["command"]
-    sql_agent_messages = state["sql_agent_messages"]
-    db_agent_feedback= state["db_agent_feedback"]
+    # Handle DB Agent Feedback
+    if db_feedback and len(db_feedback) > 0:
+        for item in db_feedback:
+            formatted_output.append(f"{item}")
 
-    sql_feedback_message=""
-    # Initialize SQL state if not exists
-    data_frame_metadata : DataFrameMetadata = {}
+    # Handle SQL Feedback
+    if sql_feedback and sql_feedback.strip():
+        formatted_output.append(f"{sql_feedback}")
 
-    import streamlit as st
-    # st.write("before trying1", sql_agent_messages)
+    # If no feedback available
+    if not formatted_output:
+        formatted_output.append("No feedback available")
 
-    # Create system message
-    sys_msg = get_sql_agent_system_message(dialect="SQLite", top_k=5)
+    # formatted_output.append("\n**************************************************\n")
 
 
-    # Assuming the data is stored in a variable called `messages`
-    try:
-        last_ai_index = max(i for i, msg in enumerate(sql_agent_messages) if msg.type == "ai")
-        #st.write("last_ai_index :",last_ai_index )
-        last_tool_messages = [msg for msg in sql_agent_messages[last_ai_index + 1:] if msg.type == "tool"]
-        #st.write("last_tool_messages", last_tool_messages)
-        # st.write("last_tool_messages", last_tool_messages)
-    except:
-        st.write("jnnj")
-        last_tool_messages=[]
-        
-    for msg in last_tool_messages:
-        if msg.name == "sql_db_query":
-            data_frame_metadata=msg.artifact
-            sql_feedback_message += f"\n tool output: {msg.content}"
-        else:
-            st.write("msggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg", msg.content)
-            sql_feedback_message += f"\n tool output: {msg.content}"
-
-
-    context_message = HumanMessage(content=f"""
-- user query (for context only, do not execute): {query}
-- command to execute: {command}
-- feedback: {db_agent_feedback} + {sql_feedback_message}
-        """)
-
-    try:  
-        # response = llm_with_tools.invoke([sys_msg] + [command]+ sql_agent_messages )
-        response = llm_with_tools.invoke([sys_msg] + [context_message])
-
-        feedback_message = f"{response.content}"
-        sql_feedback_message += f"{response.content}"
-
-        # # Assuming the data is stored in a variable called `messages`
-        # try:
-        #     last_ai_index = max(i for i, msg in enumerate(sql_agent_messages) if msg.type == "ai")
-        #     #st.write("last_ai_index :",last_ai_index )
-        #     last_tool_messages = [msg for msg in sql_agent_messages[last_ai_index + 1:] if msg.type == "tool"]
-        #     #st.write("last_tool_messages", last_tool_messages)
-        #     # st.write("last_tool_messages", last_tool_messages)
-        # except:
-        #     st.write("jnnj")
-        #     last_tool_messages=[]
-            
-        # for msg in last_tool_messages:
-        #     if msg.name == "sql_db_query":
-        #         data_frame_metadata=msg.artifact
-        #     else:
-        #         st.write("msggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg", msg.content)
-        #         sql_feedback_message += f"\n {msg.content} tool"
-
-
-
-        # parse_agent_messages(sql_agent_messages)
-        if hasattr(response, "tool_calls") and response.tool_calls:
-            tool_calls = response.tool_calls
-
-            for call in tool_calls:
-                tool_name = call.get("name")
-                tool_args = call.get("args", {})
-
-                # Add tool call details to feedback
-                if tool_name:
-                    feedback_message += f"\nCalling the {tool_name} tool"
-                    sql_feedback_message += f"\nCalling the {tool_name} tool"
-                if tool_args:
-                    feedback_message += f" with the following arguments: {tool_args}"
-                    sql_feedback_message += f" with the following arguments: {tool_args}"
-
-
-
-
-        # return {
-        #     "messages": [response],
-        #     "sql_agent_messages": [response],
-        #     "command": command,
-        #     "data_frames_metadata": [data_frame_metadata],
-        #     "feedback": [{
-        #         "agent": "sql_agent",
-        #         "command": command,
-        #         "response": feedback_message,
-        #         "status": "Success",
-        #     }]
-        # }
-            # Build the return dictionary
-        return_dict = {
-            "messages": [response],
-            "sql_agent_messages": [response],
-            "command": command,
-            "feedback": [{
-                "agent": "sql_agent",
-                "command": command,
-                "response": feedback_message,
-                "status": "Success",
-            }],
-            "db_agent_feedback":  [sql_feedback_message]
-        }
-
-        # Add data_frames_metadata only if data_frame_metadata is not empty
-        if data_frame_metadata:
-            return_dict["data_frames_metadata"] = [data_frame_metadata]
-
-        return return_dict
-
-    except Exception as e:
-        # sql_state["status"] = "error"
-        error_msg = HumanMessage(content=str(e))
-
-        return {
-            "sql_agent_messages": [error_msg],
-            "command": command,
-            "feedback": [{
-                "status": "error",
-                "step": 2,
-                "message": "SQL execution failed",
-                "result": {
-                    "success": False,
-                    "data": None,
-                    "message": f"Error executing SQL query: {str(e)}",
-                    "error": str(e)
-                }
-            }]
-        }
-    
-
-
-
+    return "\n".join(formatted_output)
 
 def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -463,16 +333,19 @@ def SQLAgent(state: Dict[str, Any]) -> Dict[str, Any]:
                 "msggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
                 msg.content,
             )
-            sql_feedback_message += f"\n tool output: {msg.content}"
+            sql_feedback_message += f"tool output: {msg.content}\n"
 
     # Create a context message to pass to the LLM
     context_message = HumanMessage(
         content=f"""
 - user query (for context only, do not execute): {query}
 - command to execute: {command}
-- feedback: {db_agent_feedback} + {sql_feedback_message}
-        """
-    )
+
+- feedback: {db_agent_feedback} + {sql_feedback_message}    
+    """)
+    # - feedback: {db_agent_feedback + [sql_feedback_message]}
+    # - feedback: {db_agent_feedback} + {sql_feedback_message}
+    # - feedback: {format_feedback(db_agent_feedback, sql_feedback_message)}  
 
     try:
         # Optionally, you could invoke with your full messages list:

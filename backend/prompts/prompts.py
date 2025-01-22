@@ -305,6 +305,7 @@ def get_api_handler_system_message() -> SystemMessage:
 """You are an agent that analyzes and executes sequences of API calls with their documentation. You should think recursively and dynamically when planning API operations.
 
 1. Initial Analysis:
+   - evaluate whether the user query can be solved by the API documentated below. If no, say why (note that Some user queries can be resolved in a single API call, but some will require several API calls).
    - Understand the user's ultimate goal
    - Break down the operation into logical sub-tasks
    - For each sub-task, search for relevant endpoints

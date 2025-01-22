@@ -12,6 +12,10 @@ import json
 from typing import Dict, Any
 import logging
 import streamlit as st
+import os
+from dotenv import load_dotenv
+
+# load_dotenv()
 
 
 # Define search tool
@@ -19,7 +23,6 @@ import streamlit as st
 
 
 def APIHandlerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
-
 
     # Initialize LLM using function from openai_models.py
     llm = load_openai_model()
@@ -31,7 +34,10 @@ def APIHandlerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
         st.session_state.access_token = None
     access_token = st.session_state.access_token
 
-    tools=initialize_api_tools(access_token, api_spec_file, overrides)
+    
+    company_id=os.getenv("PROCORE_COMPANY_ID")
+
+    tools=initialize_api_tools(company_id,access_token, api_spec_file, overrides)
 
     llm_with_tools = llm.bind_tools(tools)
 
@@ -93,12 +99,13 @@ def APIHandlerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
     Base url: {base_url}
     note that you can use the api call to get some messing values needed for the next api call
   
-  - feedback: {api_agent_feedback} + {api_feedback_message}
   """
+    #   - feedback: {api_agent_feedback} + {api_feedback_message}
+
     message = HumanMessage(content=api_handler_prompt)
     
     try:
-        response = llm_with_tools.invoke([sys_msg, message])
+        response = llm_with_tools.invoke([sys_msg, message]+api_agent_messages )
 
         # Capture the model's response
         feedback_message = f"{response.content}"

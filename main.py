@@ -17,6 +17,7 @@ def main():
   # Initialize session state
   initialize_session_state()
 
+
   # Add a custom title and a description
   st.title("Welcome to Procore AI Assistant")
   st.markdown("### How can I assist you today?")
@@ -108,7 +109,7 @@ if __name__ == "__main__":
 
 #   # Add a logout button in the sidebar
 #   with st.sidebar:
-#       if st.button("Logout"):
+#       if st.button("Logout"): AXXXXAzzzzzzzzzzzzzzzzZZZZZZ
 #           clear_auth_state()
 #           st.session_state.access_token = None  # Clear the access token
 #           st.session_state.messages = []  # Optionally clear messages on logout

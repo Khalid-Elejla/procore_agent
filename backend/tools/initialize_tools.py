@@ -42,11 +42,12 @@ def load_reduced_api_spec(file_path: str, overrides: dict = None) -> dict:
 
 
 def initialize_api_tools(
+    company_id: str = None,
     access_token : str = None,
     api_spec_file: str = None,
     overrides: dict = None, 
 ):
-    headers= {"Authorization": f"Bearer {access_token}"}
+    headers= {"Authorization": f"Bearer {access_token}","Procore-Company-Id":f"{company_id}"}
     http_tool = HTTPRequestTool(headers = headers)
     
 
@@ -69,7 +70,8 @@ def initialize_api_tools(
 
     
     try:
-        endpoints_manager.load_embeddings('endpoint_embeddings.pkl')
+        # endpoints_manager.load_embeddings('endpoint_embeddings.pkl')
+        endpoints_manager.load_embeddings('new_endpoint_embeddings.pkl')
     except FileNotFoundError:
         # Initial embedding creation
         # overrides = {"servers": [{"url": "https://sandbox.procore.com"}]}

@@ -51,6 +51,13 @@ def reduce_openapi_spec(spec: dict, dereference: bool = True) -> ReducedOpenAPIS
     for route, path_item in spec["paths"].items():
         # Get path-level parameters (shared across operations)
         high_level_parameters = path_item.get("parameters", [])
+
+        # Remove header parameters from high-level parameters
+        high_level_parameters = [
+            param for param in high_level_parameters 
+            if param.get("in") != "header"
+        ]
+
         
 
         # Process each operation
@@ -94,7 +101,7 @@ def reduce_openapi_spec(spec: dict, dereference: bool = True) -> ReducedOpenAPIS
             out["parameters"] = [
                 parameter
                 for parameter in docs.get("parameters", [])
-                if parameter.get("required") or parameter.get("in") in ["path", "header"]
+                if parameter.get("required") or parameter.get("in") in ["path"]#, "header"]
             ]
         # if "200" in docs.get("responses", {}):
         #     out["responses"] = docs["responses"]["200"]
