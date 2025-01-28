@@ -20,7 +20,21 @@ def run_agent_graph(query: str) -> str:
   access_token = os.getenv('access_token')
   company_id = os.getenv('PROCORE_COMPANY_ID')
 
-  result = assistant_graph.invoke({"query": query, "messages": []}, config={"callbacks": [langfuse_handler]})
+#================================================================================================
+# Human in the loop
+  from langgraph.types import Command
+  # thread_config = {"configurable": {"thread_id": "1"}}
+
+  # result = assistant_graph.invoke({"query": query, "messages": []}, config={"callbacks": [langfuse_handler],"thread_id": "1"},)
+  # result = assistant_graph.invoke(Command(resume=True), config={"callbacks": [langfuse_handler],"thread_id": "1"},)
+  result = assistant_graph.invoke({"query": query, "messages": []}, config={"callbacks": [langfuse_handler],"thread_id": "1"})
+#   try:
+#     result = assistant_graph.invoke({"query": query, "messages": []}, config={"callbacks": [langfuse_handler],"thread_id": "1"})
+#   except Exception as e:
+#     result = assistant_graph.invoke(Command(resume={"run_api_call":"yes"}), config={"callbacks": [langfuse_handler],"thread_id": "1"},)
+# #================================================================================================
+
+  # result = assistant_graph.invoke({"query": query, "messages": []}, config={"callbacks": [langfuse_handler]})
 
   # with suppress_print():      
   #     result = assistant_graph.invoke({"query": query, "messages": []}, config={"callbacks": [langfuse_handler]})

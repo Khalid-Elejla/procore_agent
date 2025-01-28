@@ -225,6 +225,7 @@ from typing import List, Tuple, Dict
 import faiss
 from langgraph.types import Command
 from langchain_core.messages import ToolMessage
+from langgraph.types import Command, interrupt
 
 
 class HTTPResponse(BaseModel):
@@ -338,7 +339,21 @@ class HTTPRequestTool(BaseModel):
         body: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Run the HTTP request tool"""
+
+
+        # human_review = interrupt(
+        #     {
+        #         "question": "Would you like to approve this API call?",
+        #         # Surface tool calls for review
+        #         "run_api_call":"",
+        #     }
+        # )
+            
         try:
+
+
+
+            # graph.invoke(Command(resume=value_from_human), config=thread_config)
             response = self._make_request(
                 method=method,
                 base_url=base_url,

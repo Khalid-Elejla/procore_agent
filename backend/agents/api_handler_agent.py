@@ -15,6 +15,9 @@ import streamlit as st
 import os
 from dotenv import load_dotenv
 
+from langgraph.types import interrupt, Command
+
+
 # load_dotenv()
 
 
@@ -95,8 +98,9 @@ def APIHandlerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
 
   - command to execute: {command}
 
-    Here is documentation on the API:
+    API configuration:
     Base url: {base_url}
+    User Company id: {company_id}
     note that you can use the api call to get some messing values needed for the next api call
   
   """
@@ -107,6 +111,31 @@ def APIHandlerAgent(state: Dict[str, Any]) -> Dict[str, Any]:
     try:
         response = llm_with_tools.invoke([sys_msg, message]+api_agent_messages )
 
+
+#================================================================================================
+# Human in the loop
+        # st.write(f"before interrupt")
+        # human_review = interrupt(
+        #     {
+        #         "question": "Would you like to approve this API call?",
+        #         "planned_api_call": {
+        #             "content": response.content,
+        #             "tool_calls": response.tool_calls if hasattr(response, "tool_calls") else None
+        #         }
+        #     }
+        # )
+        # st.write(f"after interrupt: {human_review}")
+
+        #review_action, review_data = human_review
+        #st.write(f"Review action: {review_action}")
+
+        # # Approve the tool call and continue
+        # if review_action == "continue":
+        #     return Command(goto="run_tool")
+
+        # if approval:
+        #     response = llm_with_tools.invoke([sys_msg, message, approval]+api_agent_messages)
+#================================================================================================
         # Capture the model's response
         feedback_message = f"{response.content}"
         api_feedback_message += f"{response.content}"

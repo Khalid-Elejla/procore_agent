@@ -71,14 +71,14 @@ def initialize_api_tools(
     
     try:
         # endpoints_manager.load_embeddings('endpoint_embeddings.pkl')
-        endpoints_manager.load_embeddings('new_endpoint_embeddings.pkl')
+        endpoints_manager.load_embeddings('new_endpoint_embeddings2.pkl')
     except FileNotFoundError:
         # Initial embedding creation
         # overrides = {"servers": [{"url": "https://sandbox.procore.com"}]}
         reduced_api_spec = load_reduced_api_spec(api_spec_file, overrides)
         endpoints = reduced_api_spec.endpoints # Your list of endpoints
         endpoints_manager.embed_endpoints(endpoints)
-        endpoints_manager.save_embeddings('endpoint_embeddings.pkl')
+        endpoints_manager.save_embeddings('new_endpoint_embeddings2.pkl')
         #endpoints_manager.load_embeddings('endpoint_embeddings.pkl')
 
     try:

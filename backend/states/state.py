@@ -64,6 +64,7 @@ class GraphState(TypedDict):
   query: str
   plan: List[PlanStep]
   command: str
+  approved: bool  # New field to track approval status
   # current_task: AgentState
   feedback:Annotated[List[AgentResponse], operator.add]
   db_agent_feedback:Annotated[List[str], operator.add]

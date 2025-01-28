@@ -32,6 +32,8 @@ from dotenv import load_dotenv
 
 import logging
 logging.basicConfig(level=logging.INFO)
+from langgraph.checkpoint.memory import MemorySaver # Human in the loop
+
 
 def build_graph():
     try:
@@ -118,7 +120,14 @@ def build_graph():
    
         builders.add_edge("reviewer", END)
 
-        react_graphs = builders.compile()
+
+#================================================================================================
+        # Human in the loop
+        checkpointer = MemorySaver()
+        react_graphs = builders.compile(checkpointer=checkpointer)
+#================================================================================================
+        # react_graphs = builders.compile()
+
         # logging.debug("Graph built successfully!")
         return react_graphs
     except Exception as e:
