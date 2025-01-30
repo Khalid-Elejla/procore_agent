@@ -1,6 +1,6 @@
 # main.py
 from ..models.openai_models import load_openai_model  # Import the model loader
-from langgraph.graph import START, StateGraph, END
+from langgraph.graph import START, StateGraph, END, MessagesState
 # from langgraph.prebuilt import tools_condition, ToolNode
 from .graph_tools import custom_tools_condition, CustomToolNode
 
@@ -19,6 +19,7 @@ from ..agents.router_agent import RouterAgent
 from ..agents.sql_agent import SQLAgent
 from ..agents.reviewer_agent import ReviewerAgent
 from ..agents.api_handler_agent import APIHandlerAgent
+from ..agents.human import human
 
 from langchain_community.utilities import SQLDatabase
 # from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
@@ -33,6 +34,8 @@ from dotenv import load_dotenv
 import logging
 logging.basicConfig(level=logging.INFO)
 from langgraph.checkpoint.memory import MemorySaver # Human in the loop
+from typing import Annotated, Literal
+from langgraph.types import Command, interrupt
 
 
 def build_graph():
@@ -68,36 +71,32 @@ def build_graph():
         
         load_dotenv()
         company_id=os.getenv("PROCORE_COMPANY_ID")
-        logging.info(f"Final database tools: {company_id}")
+        # logging.info(f"Final database tools: {company_id}")
 
         database_tools = initialize_db_tools(db_uri="sqlite:///backend\\procore_db.sqlite", df_manager= df_manager)
         api_tools = initialize_api_tools(company_id, access_token, api_spec_file, overrides)
-        logging.info(f"Final database tools: {api_tools}")
+        # logging.info(f"Final database tools: {api_tools}")
         builders = StateGraph(GraphState)
-
         
-
         builders.add_node("planner", PlannerAgent)
         builders.add_node("router", RouterAgent)
         builders.add_node("sql_agent", SQLAgent)
         builders.add_node("reviewer", ReviewerAgent)
         builders.add_node("api_handler", APIHandlerAgent)
+        logging.info(f"LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLl:MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMm")
+
+        builders.add_node("human", human)
+        logging.info(f"HUMAAAAAAAAANNNNNNNNN: {human}")
+
+
         builders.add_node("api_tools", CustomToolNode(api_tools, message_key="api_agent_messages"))
         builders.add_node("sql_tools", CustomToolNode(database_tools, message_key="sql_agent_messages"))
+
 
         builders.add_edge(START, "planner")
         builders.add_edge("planner", "router")
 
         builders.add_conditional_edges("router", route)
-
-        # builders.add_conditional_edges(
-        #     "sql_agent",
-        #     tools_condition,
-        #     {
-        #         "tools": "sql_tools",
-        #         "__end__": "router"
-        #     }
-        # )
 
         builders.add_conditional_edges(
             "sql_agent",
@@ -111,13 +110,24 @@ def build_graph():
             "api_handler",
             lambda state: custom_tools_condition(state, message_key="api_agent_messages"),  {
                 "tools": "api_tools",
+                "human": "human",
                 "__end__": "router"
             }
         )
 
+
+        # def call_hotel_advisor(state: MessagesState,) -> Command[Literal["router", "human"]]:
+        #     response = hotel_advisor.invoke(state)
+        #     return Command(update=response, goto="human")
+
+
+#================================================================================================
+
         builders.add_edge("sql_tools", "sql_agent")
         builders.add_edge("api_tools", "api_handler")
-   
+        builders.add_edge("human","api_handler")
+
+
         builders.add_edge("reviewer", END)
 
 

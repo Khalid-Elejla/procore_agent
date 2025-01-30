@@ -48,7 +48,7 @@ from langgraph.utils.runnable import RunnableCallable
 
 from pydantic import BaseModel
 
-
+import logging
 
 # def custom_tools_condition(
 #     state: Union[list[AnyMessage], dict[str, Any], BaseModel],
@@ -66,10 +66,10 @@ from pydantic import BaseModel
 #         return "tools"
 #     return "__end__"
 
-def custom_tools_condition(  
+def custom_tools_condition(
     state: Union[list[AnyMessage], dict[str, Any], BaseModel],  
     message_key: str = "messages",  
-) -> Literal["tools", "__end__"]:  
+) -> Literal["tools","human", "__end__"]:  
 
     if isinstance(state, list):  
         ai_message = state[-1]  
@@ -78,10 +78,18 @@ def custom_tools_condition(
     elif messages := getattr(state, message_key, []):  
         ai_message = messages[-1]  
     else:  
-        raise ValueError(f"No messages found in input state to tool_edge: {state}")  
+        raise ValueError(f"No messages found in input state to tool_edge: {state}")
+    logging.debug(f"ai_message: {ai_message}")
+    logging.debug(f"agggggggggggggeeeeeeeeeeeeent : {state['api_agent_messages'][-1].content}")
+    # messages = state.get(message_key, [])
+    # last_message = messages[-1] if messages else None 
     if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:  
         return "tools"  
-    return "__end__"
+    # elif "need more information" in state["api_agent_messages"][-1].content:
+    elif "HUMAN_INPUT_NEEDED" in  state["api_agent_messages"][-1].content:
+        return "human"
+    else:
+        return "__end__"
 
 # class SQLToolNode(ToolNode):  
 #     """Specialized ToolNode for SQL operations"""  

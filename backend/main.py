@@ -28,10 +28,18 @@ def run_agent_graph(query: str) -> str:
   # result = assistant_graph.invoke({"query": query, "messages": []}, config={"callbacks": [langfuse_handler],"thread_id": "1"},)
   # result = assistant_graph.invoke(Command(resume=True), config={"callbacks": [langfuse_handler],"thread_id": "1"},)
   result = assistant_graph.invoke({"query": query, "messages": []}, config={"callbacks": [langfuse_handler],"thread_id": "1"})
-#   try:
-#     result = assistant_graph.invoke({"query": query, "messages": []}, config={"callbacks": [langfuse_handler],"thread_id": "1"})
-#   except Exception as e:
-#     result = assistant_graph.invoke(Command(resume={"run_api_call":"yes"}), config={"callbacks": [langfuse_handler],"thread_id": "1"},)
+
+  import streamlit  as st
+  while True:
+    config = {"configurable": {"thread_id": "1"}}
+    snapshot = assistant_graph.get_state(config)
+    st.write(snapshot.next)
+        
+    if snapshot.next == ('human',):
+      result = assistant_graph.invoke(Command(resume="I dont know assume any missing information, its for test purpose only"), config={"callbacks": [langfuse_handler],"thread_id": "1"},)
+      break
+    else:
+      result = assistant_graph.invoke({"query": query, "messages": []}, config={"callbacks": [langfuse_handler],"thread_id": "1"})
 # #================================================================================================
 
   # result = assistant_graph.invoke({"query": query, "messages": []}, config={"callbacks": [langfuse_handler]})
