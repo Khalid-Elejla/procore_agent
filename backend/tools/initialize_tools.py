@@ -12,7 +12,6 @@ import yaml
 import streamlit as st
 import os
 import json
-from sentence_transformers import SentenceTransformer
 from typing import List
 import logging
 
